@@ -1,0 +1,24 @@
+{
+  "name": "rootly-plugins",
+  "owner": {
+    "name": "Rootly AI Labs",
+    "email": "support@rootly.com"
+  },
+  "metadata": {
+    "description": "Official Rootly plugins for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "rootly",
+      "source": "./",
+      "description": "Full-lifecycle incident management: deploy safety, incident response, on-call management, and retrospectives.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Rootly AI Labs"
+      },
+      "license": "Apache-2.0",
+      "keywords": ["incident-management", "on-call", "sre", "devops", "rootly"]
+    }
+  ]
+}
