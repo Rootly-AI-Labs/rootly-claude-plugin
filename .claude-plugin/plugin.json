@@ -1,13 +1,13 @@
 {
   "name": "rootly",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Full-lifecycle incident management from your IDE. Prevent incidents before deploy, respond in real-time, and learn from post-mortems -- powered by Rootly.",
   "author": {
     "name": "Rootly AI Labs",
     "email": "support@rootly.com",
     "url": "https://rootly.com"
   },
-  "homepage": "https://rootly.com/integrations/claude",
+  "homepage": "https://github.com/Rootly-AI-Labs/claude-rootly-plugin",
   "repository": "https://github.com/Rootly-AI-Labs/claude-rootly-plugin",
   "license": "Apache-2.0",
   "keywords": [

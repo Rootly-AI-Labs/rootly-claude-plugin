@@ -17,10 +17,6 @@
 
 <br />
 
-<p align="center">
-  <img src="assets/demo.gif" alt="Rootly plugin demo" width="700" />
-</p>
-
 ---
 
 ## Why
@@ -84,39 +80,71 @@ Generates a structured retrospective from incident data: timeline, contributing 
 
 ## Installation
 
-### From the Plugin Marketplace
+> We've applied to have this plugin listed on the [official Claude Code plugin marketplace](https://claude.com/plugins). In the meantime, install manually:
+
+### Step 1: Connect the Rootly MCP Server
+
+The plugin requires the Rootly MCP server to access incident data. You must configure it before using the plugin.
+
+Get an API token from your Rootly dashboard under **Settings > API Keys**, then configure the MCP server for your platform:
+
+<details>
+<summary><strong>Claude Code (CLI)</strong></summary>
+
+The plugin's `.mcp.json` handles this automatically. Just set the token:
 
 ```bash
-/plugin marketplace add Rootly-AI-Labs/claude-rootly-plugin
-/plugin install rootly
-```
-
-### Manual
-
-```bash
-git clone https://github.com/Rootly-AI-Labs/claude-rootly-plugin.git
-claude --plugin-dir /path/to/claude-rootly-plugin
-```
-
-### Set Your API Token
-
-Get a token from your Rootly dashboard under **Settings > API Keys**, then:
-
-```bash
-# Option A: Shell profile (~/.bashrc, ~/.zshrc)
+# Add to your shell profile (~/.bashrc, ~/.zshrc)
 export ROOTLY_API_TOKEN="your-token-here"
 ```
 
-```bash
-# Option B: Claude settings (~/.claude/settings.json)
+Or add to `~/.claude/settings.json`:
+
+```json
 {
   "env": {
     "ROOTLY_API_TOKEN": "your-token-here"
   }
 }
 ```
+</details>
 
-Verify everything works:
+<details>
+<summary><strong>Claude Desktop / Cowork</strong></summary>
+
+Add the Rootly MCP server to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "rootly": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://mcp.rootly.com/mcp",
+        "--header", "Authorization:Bearer YOUR_TOKEN_HERE"
+      ]
+    }
+  }
+}
+```
+
+Replace `YOUR_TOKEN_HERE` with your Rootly API token. Restart Claude Desktop after saving.
+
+> **Note**: Claude Desktop requires stdio-based MCP servers. The `mcp-remote` package bridges the remote Rootly HTTP server into the stdio transport that Desktop expects.
+</details>
+
+### Step 2: Install the Plugin
+
+**Claude Code (CLI)**:
+```bash
+git clone https://github.com/Rootly-AI-Labs/claude-rootly-plugin.git
+claude --plugin-dir ./claude-rootly-plugin
+```
+
+**Claude Desktop / Cowork**: Upload `rootly.zip` via the Customize menu in Cowork, or browse the plugin marketplace once listed.
+
+### Step 3: Verify
 
 ```
 /rootly:setup

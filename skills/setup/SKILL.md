@@ -9,15 +9,12 @@ allowed-tools: Bash, mcp__rootly__*
 
 You are running the first-time setup for the Rootly Claude plugin. Follow these steps in order:
 
-## Step 1: Check API Token
+## Step 1: Verify MCP Connection
 
-Check if the `ROOTLY_API_TOKEN` environment variable is set by running:
+Test the connection by calling the `get_server_version` MCP tool. This simultaneously validates that the API token is configured and that the MCP server is reachable.
 
-```
-echo "${ROOTLY_API_TOKEN:+set}"
-```
-
-**If NOT set**, provide these instructions:
+- **Success**: Report the server version and skip to Step 3.
+- **Failure**: The token is likely missing or invalid. Provide these instructions:
 
 > **Rootly API Token Required**
 >
@@ -39,18 +36,7 @@ echo "${ROOTLY_API_TOKEN:+set}"
 
 Then stop here -- no further steps possible without the token.
 
-## Step 2: Verify MCP Connection
-
-If the token is set, test the connection by calling the `get_server_version` MCP tool.
-
-- **Success**: Report the server version and confirm the connection is working.
-- **Failure**: Diagnose the issue:
-  - Network error: Check internet connectivity or VPN
-  - 401/403: Token is invalid or expired -- direct user to regenerate
-  - Timeout: Rootly MCP server may be temporarily unavailable
-  - Other: Report the specific error for troubleshooting
-
-## Step 3: Service Mapping Configuration
+## Step 2: Service Mapping Configuration
 
 Check if `.claude/rootly-config.json` exists in the current project directory.
 
@@ -68,7 +54,7 @@ Check if `.claude/rootly-config.json` exists in the current project directory.
 
 **If the file exists**, read and display its current configuration.
 
-## Step 4: Show Quick-Start Guide
+## Step 3: Show Quick-Start Guide
 
 Once setup is complete, display:
 
