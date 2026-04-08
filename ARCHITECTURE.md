@@ -1,18 +1,18 @@
-# Rootly Claude Plugin - Architecture Plan
+# Rootly Claude Plugin - Architecture Overview
 
 ## Overview
 
-A Claude Code plugin that wraps Rootly's existing MCP server (101 tools) into opinionated, developer-friendly workflows for the full incident lifecycle: prevent, respond, learn. The plugin is primarily prompt engineering and workflow orchestration. All incident data flows through the Rootly MCP server at `mcp.rootly.com`. Hook scripts make minimal direct REST API calls as an intentional trade-off for speed (documented below).
+This Claude Code plugin layers opinionated, developer-friendly workflows on top of Rootly's MCP server for the full incident lifecycle: prevent, respond, learn. The implementation is primarily prompt engineering and workflow orchestration. Incident data flows through the Rootly MCP server at `mcp.rootly.com`, while hooks use minimal direct REST API calls for low-latency checks.
 
 ---
 
 ## Directory Structure
 
 ```
-claude-rootly-plugin/
+rootly-claude-plugin/
 ├── .claude-plugin/
 │   ├── plugin.json                          # Plugin manifest (required)
-│   └── marketplace.json                     # Marketplace listing (for self-hosted marketplace)
+│   └── marketplace.json                     # Repo-hosted marketplace metadata
 ├── .mcp.json                                # Rootly MCP server reference
 ├── skills/
 │   ├── setup/
@@ -40,8 +40,7 @@ claude-rootly-plugin/
 │   ├── validate-token.sh                    # SessionStart token validation
 │   └── register-deploy.sh                   # Optional: post-push deployment registration
 ├── README.md
-├── LICENSE
-└── CHANGELOG.md
+└── LICENSE
 ```
 
 ---
@@ -53,7 +52,7 @@ claude-rootly-plugin/
 ```json
 {
   "name": "rootly",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Full-lifecycle incident management from your IDE. Prevent incidents before deploy, respond in real-time, and learn from post-mortems -- powered by Rootly.",
   "author": {
     "name": "Rootly AI Labs",
@@ -61,8 +60,14 @@ claude-rootly-plugin/
     "url": "https://rootly.com"
   },
   "homepage": "https://rootly.com/integrations/claude",
-  "repository": "https://github.com/Rootly-AI-Labs/claude-rootly-plugin",
+  "repository": "https://github.com/Rootly-AI-Labs/rootly-claude-plugin",
   "license": "Apache-2.0",
+  "userConfig": {
+    "ROOTLY_API_TOKEN": {
+      "description": "Rootly API token used for MCP access and incident workflow hooks",
+      "sensitive": true
+    }
+  },
   "keywords": [
     "incident-management",
     "on-call",
@@ -77,10 +82,7 @@ claude-rootly-plugin/
 
 ### 2. Marketplace Entry (`.claude-plugin/marketplace.json`)
 
-This file lives inside `.claude-plugin/` so the repo itself can serve as a marketplace. Users add it via:
-```
-/plugin marketplace add Rootly-AI-Labs/claude-rootly-plugin
-```
+This file provides the repo-hosted marketplace metadata for the plugin.
 
 ```json
 {
@@ -91,14 +93,14 @@ This file lives inside `.claude-plugin/` so the repo itself can serve as a marke
   },
   "metadata": {
     "description": "Official Rootly plugins for Claude Code",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "rootly",
       "source": "./",
       "description": "Full-lifecycle incident management: deploy safety, incident response, on-call management, and retrospectives.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Rootly AI Labs"
       },
@@ -111,7 +113,7 @@ This file lives inside `.claude-plugin/` so the repo itself can serve as a marke
 
 ### 3. MCP Server Reference (`.mcp.json`)
 
-Points to Rootly's hosted MCP server. No bundled server binary.
+This file references Rootly's hosted MCP server. The plugin does not bundle a server binary.
 
 ```json
 {
@@ -120,16 +122,16 @@ Points to Rootly's hosted MCP server. No bundled server binary.
       "type": "http",
       "url": "https://mcp.rootly.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${ROOTLY_API_TOKEN}"
+        "Authorization": "Bearer ${user_config.ROOTLY_API_TOKEN}"
       }
     }
   }
 }
 ```
 
-**Authentication**: Users set `ROOTLY_API_TOKEN` as an environment variable (in shell profile or via `~/.claude/settings.json` under `"env"`). Claude Code resolves `${VAR}` syntax in HTTP transport headers, including arbitrary env vars -- this is confirmed in the official docs. The `${VAR:-default}` fallback syntax is also supported.
+**Authentication**: The plugin declares `ROOTLY_API_TOKEN` in `userConfig`, so Claude Code can prompt for it when the plugin is enabled. The hosted MCP config consumes that value through `${user_config.ROOTLY_API_TOKEN}`. For local development with `--plugin-dir`, the runtime scripts still support `ROOTLY_API_TOKEN` as a fallback environment variable.
 
-**Alternative configurations** (documented in README for advanced users):
+**Alternative configurations** (also documented in the README for advanced users):
 - **CLI setup**: `claude mcp add rootly --transport http https://mcp.rootly.com/mcp --header "Authorization: Bearer YOUR_TOKEN"`
 - **Local MCP server** (for self-hosted Rootly or offline use):
   ```json
@@ -139,7 +141,7 @@ Points to Rootly's hosted MCP server. No bundled server binary.
         "command": "uvx",
         "args": ["--from", "rootly-mcp-server", "rootly-mcp-server"],
         "env": {
-          "ROOTLY_API_TOKEN": "<YOUR_TOKEN>"
+          "ROOTLY_API_TOKEN": "${user_config.ROOTLY_API_TOKEN}"
         }
       }
     }
@@ -148,7 +150,7 @@ Points to Rootly's hosted MCP server. No bundled server binary.
 
 ### 4. Skills (Slash Commands)
 
-Each skill is a `skills/<name>/SKILL.md` file with YAML frontmatter.
+Each skill lives in `skills/<name>/SKILL.md` with YAML frontmatter.
 
 ---
 
@@ -164,16 +166,18 @@ skills/setup/SKILL.md
 ```yaml
 name: setup
 description: Set up the Rootly plugin. Checks for API token, verifies MCP server connection, and guides through configuration. Run this after installing the plugin.
-argument-hint: []
-allowed-tools: Bash, mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - Bash
+  - mcp__rootly__*
 ```
 
 **Workflow**:
-1. Check if `ROOTLY_API_TOKEN` env var is set
+1. Check if a plugin-configured token or local `ROOTLY_API_TOKEN` fallback is available
 2. If not set, provide step-by-step instructions:
    - Where to get an API token in the Rootly dashboard (Settings > API Keys)
-   - How to set the env var (`export ROOTLY_API_TOKEN=...` in shell profile)
-   - How to verify the connection
+   - How to update the plugin configuration with the token
+   - How to use `export ROOTLY_API_TOKEN=...` only as a local development fallback
 3. If set, test the MCP connection by calling `get_server_version` (lightweight read-only tool)
 4. Confirm success or diagnose failure (invalid token, network issue, etc.)
 5. Check for `.claude/rootly-config.json` -- if missing, help create one by listing Rootly services and letting the user pick which map to this repo
@@ -194,7 +198,12 @@ skills/deploy-check/SKILL.md
 name: deploy-check
 description: Evaluate deployment risk by analyzing code changes against incident history, active incidents, and on-call readiness. Use when a developer is about to deploy, push, or merge code.
 argument-hint: [branch-name]
-allowed-tools: Bash, mcp__rootly__*
+disable-model-invocation: true
+context: fork
+agent: rootly:deploy-guardian
+allowed-tools:
+  - Bash
+  - mcp__rootly__*
 ```
 
 **Workflow** (encoded in SKILL.md prompt):
@@ -242,8 +251,12 @@ skills/respond/SKILL.md
 name: respond
 description: Investigate and respond to a production incident. Pulls context, finds similar past incidents, suggests solutions, and enables coordination -- all from the terminal. Use when paged or when an incident needs attention.
 argument-hint: [incident-id]
+disable-model-invocation: true
 context: fork
-allowed-tools: Bash, mcp__rootly__*
+agent: rootly:incident-investigator
+allowed-tools:
+  - Bash
+  - mcp__rootly__*
 ```
 
 **Workflow**:
@@ -267,7 +280,7 @@ allowed-tools: Bash, mcp__rootly__*
 - If `find_related_incidents` returns low confidence (< 0.3), flag and suggest manual investigation
 - If no incidents are active, report "no active incidents" cleanly
 
-**Note**: `context: fork` runs this in an isolated subagent to avoid polluting the main coding context with incident data.
+**Note**: `context: fork` runs this in an isolated subagent to avoid polluting the main coding context with incident data, and `agent: rootly:incident-investigator` explicitly routes the workflow through the shipped specialist agent.
 
 ---
 
@@ -284,7 +297,9 @@ skills/oncall/SKILL.md
 name: oncall
 description: Show current on-call status, shift metrics, and health indicators for your team. Use to check who's on-call, handoff context, or on-call workload.
 argument-hint: [team-name]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
 ```
 
 **Workflow**:
@@ -312,7 +327,11 @@ skills/retro/SKILL.md
 name: retro
 description: Generate a structured post-incident retrospective from incident data. Use after an incident is resolved to document what happened, why, and action items.
 argument-hint: [incident-id]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+context: fork
+agent: rootly:retro-analyst
+allowed-tools:
+  - mcp__rootly__*
 ```
 
 **Workflow**:
@@ -348,7 +367,9 @@ skills/status/SKILL.md
 name: status
 description: Show a compact service health overview including active incidents by severity. Use for a quick health check of your services.
 argument-hint: [service-name]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
 ```
 
 **Workflow**:
@@ -374,7 +395,9 @@ skills/ask/SKILL.md
 name: ask
 description: Ask natural language questions about incidents, on-call, services, and reliability data. Translates your question into Rootly API calls and returns structured answers.
 argument-hint: [your question]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
 ```
 
 **Workflow**:
@@ -400,31 +423,7 @@ agents/incident-investigator.md
 **Frontmatter**:
 ```yaml
 name: incident-investigator
-description: >
-  Use this agent when the user needs deep investigation of a production incident,
-  wants to understand root cause, or needs a thorough analysis that goes beyond
-  the initial /rootly:respond summary.
-
-  Examples:
-
-  <example>
-  Context: User wants deeper investigation after initial triage
-  user: "Dig deeper into INC-4521, the initial suggestions didn't help"
-  assistant: "I'll launch the incident-investigator for a thorough analysis."
-  <commentary>
-  User needs deeper investigation beyond surface-level triage.
-  </commentary>
-  </example>
-
-  <example>
-  Context: User wants to understand root cause of a complex incident
-  user: "What's the root cause of this outage? Walk me through everything."
-  assistant: "I'll use the incident-investigator to trace the full causation chain."
-  <commentary>
-  Complex root cause analysis requiring multi-step investigation.
-  </commentary>
-  </example>
-
+description: Deep production-incident investigator for root-cause analysis, evidence gathering, and remediation planning beyond the initial response brief.
 model: sonnet
 tools: Read, Grep, Glob, Bash, mcp__rootly__*
 ```
@@ -450,31 +449,7 @@ agents/deploy-guardian.md
 **Frontmatter**:
 ```yaml
 name: deploy-guardian
-description: >
-  Use this agent for comprehensive deployment safety analysis that goes beyond
-  /rootly:deploy-check. Evaluates multi-service blast radius, downstream
-  dependency impact, and cross-team coordination needs.
-
-  Examples:
-
-  <example>
-  Context: Complex multi-service deployment
-  user: "Is it safe to deploy all these changes across auth, payments, and billing?"
-  assistant: "I'll launch the deploy-guardian for a full blast radius analysis."
-  <commentary>
-  Multi-service deployment needs comprehensive risk evaluation beyond simple deploy-check.
-  </commentary>
-  </example>
-
-  <example>
-  Context: Deploying during an incident
-  user: "Can I still push this fix even though there's an active incident?"
-  assistant: "I'll use the deploy-guardian to evaluate whether this deploy is safe given the active incident."
-  <commentary>
-  Deployment during active incident needs careful safety analysis.
-  </commentary>
-  </example>
-
+description: Deployment safety specialist for blast-radius analysis, downstream dependency checks, and cross-team coordination planning.
 model: sonnet
 tools: Read, Grep, Glob, Bash, mcp__rootly__*
 ```
@@ -500,31 +475,7 @@ agents/retro-analyst.md
 **Frontmatter**:
 ```yaml
 name: retro-analyst
-description: >
-  Use this agent when the user wants to understand systemic patterns across
-  incidents, needs trend analysis, or wants to identify recurring reliability
-  issues that need architectural attention.
-
-  Examples:
-
-  <example>
-  Context: User notices recurring incidents
-  user: "Why does the auth service keep having incidents? Show me the pattern."
-  assistant: "I'll launch the retro-analyst to analyze the pattern across incidents."
-  <commentary>
-  Pattern analysis across multiple incidents needs deep investigation.
-  </commentary>
-  </example>
-
-  <example>
-  Context: Quarterly reliability review
-  user: "Give me a reliability analysis of our services for the last quarter"
-  assistant: "I'll use the retro-analyst to produce a comprehensive reliability report."
-  <commentary>
-  Broad reliability analysis across time period and services.
-  </commentary>
-  </example>
-
+description: Reliability pattern analyst for retrospectives, recurring-incident clustering, and systemic improvement recommendations.
 model: sonnet
 tools: Read, Grep, Glob, mcp__rootly__*
 ```
@@ -563,6 +514,12 @@ tools: Read, Grep, Glob, mcp__rootly__*
         "hooks": [
           {
             "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-active-incidents.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git push *)",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-active-incidents.sh"
           }
         ]
@@ -574,15 +531,13 @@ tools: Read, Grep, Glob, mcp__rootly__*
 
 **Hook 1: SessionStart -- Token Validation**
 - Runs once when Claude Code starts
-- Checks if `ROOTLY_API_TOKEN` is set
+- Checks for a configured plugin token, then falls back to `ROOTLY_API_TOKEN` for local development
 - If missing, outputs a brief setup message directing user to `/rootly:setup`
 - If set, pings the API to validate (with 2s timeout)
 - Never blocks -- informational only
 
 **Hook 2: PreToolUse on Bash -- Active Incident Warning**
-- Fires on all Bash tool calls (unavoidable -- all Bash commands share the tool name)
-- Script reads JSON from stdin (per hooks spec), extracts `.tool_input.command`
-- If not a git commit/push command, exits immediately (< 1ms overhead)
+- Uses hook-level `if` conditions so the script only spawns for `git commit` and `git push`
 - If git commit/push, makes one REST API call to check active incidents (< 2s)
 - Returns warning via stdout if active critical/high incidents found, empty otherwise
 - Exit code 0 always (warn, never block)
@@ -595,28 +550,32 @@ tools: Read, Grep, Glob, mcp__rootly__*
 
 ### 7. Scripts
 
-**Soft dependency**: Scripts use `python3` for JSON parsing (reading hook stdin per the Claude Code hooks spec) and `curl` for REST calls. Python 3 is present on virtually all developer machines (macOS ships with it, Linux distros include it). If unavailable, scripts fail silently per the graceful degradation principle. `jq` is recommended but not required.
+**Runtime dependencies**: Scripts use `curl` for REST calls and either `jq` or `python3` for lightweight JSON parsing. If no parser is available, they fail silently per the graceful degradation principle.
 
 #### `scripts/validate-token.sh`
 
 ```bash
 #!/bin/bash
-# SessionStart hook: check if ROOTLY_API_TOKEN is configured
-# Outputs setup guidance if missing, silent if present
+# SessionStart hook: check if a Rootly API token is configured.
+# Prefer plugin-managed configuration and fall back to the legacy env var
+# for local development with --plugin-dir.
 
-if [ -z "$ROOTLY_API_TOKEN" ]; then
-  echo "Rootly plugin: No API token found. Run /rootly:setup to configure."
+ROOTLY_TOKEN="${CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN:-${ROOTLY_API_TOKEN:-}}"
+ROOTLY_URL="${ROOTLY_API_URL:-https://api.rootly.com}"
+
+if [ -z "$ROOTLY_TOKEN" ]; then
+  echo "Rootly plugin: No API token found. Configure the plugin and then run /rootly:setup."
   exit 0
 fi
 
 # Quick validation ping (with strict timeout)
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $ROOTLY_API_TOKEN" \
-  "${ROOTLY_API_URL:-https://api.rootly.com}/v1/users/me" \
+  -H "Authorization: Bearer $ROOTLY_TOKEN" \
+  "$ROOTLY_URL/v1/users/me" \
   --max-time 2 2>/dev/null)
 
 if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
-  echo "Rootly plugin: API token appears invalid (HTTP $HTTP_CODE). Run /rootly:setup to reconfigure."
+  echo "Rootly plugin: API token appears invalid (HTTP $HTTP_CODE). Update the plugin config and run /rootly:setup again."
 fi
 
 exit 0
@@ -626,39 +585,12 @@ exit 0
 
 ```bash
 #!/bin/bash
-# PreToolUse hook: warn about active incidents before git commit/push
-# Receives hook context as JSON on stdin (per Claude Code hooks spec)
-# Outputs warning text via stdout if active incidents found, empty if clear
-# Always exits 0 (warn, never block)
+# PreToolUse hook: warn about active incidents before git commit/push.
+# hooks/hooks.json filters to the relevant Bash commands, so this script
+# only needs to perform the incident check.
 
-# Read hook input from stdin
-INPUT=$(cat)
-
-# Extract the Bash command from the hook JSON
-# Uses python3 for JSON parsing (available on macOS/Linux by default)
-# Falls back to jq if available
-if command -v jq &>/dev/null; then
-  COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
-elif command -v python3 &>/dev/null; then
-  COMMAND=$(echo "$INPUT" | python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    print(data.get('tool_input', {}).get('command', ''))
-except:
-    print('')
-" 2>/dev/null)
-else
-  exit 0  # No JSON parser available, fail silent
-fi
-
-# Only trigger on git commit or git push commands
-if [[ "$COMMAND" != *"git commit"* ]] && [[ "$COMMAND" != *"git push"* ]]; then
-  exit 0
-fi
-
-# Requires ROOTLY_API_TOKEN
-if [ -z "$ROOTLY_API_TOKEN" ]; then
+ROOTLY_TOKEN="${CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN:-${ROOTLY_API_TOKEN:-}}"
+if [ -z "$ROOTLY_TOKEN" ]; then
   exit 0  # Silent if not configured
 fi
 
@@ -667,7 +599,7 @@ fi
 # Configurable base URL via ROOTLY_API_URL for self-hosted instances
 ROOTLY_URL="${ROOTLY_API_URL:-https://api.rootly.com}"
 RESPONSE=$(curl -s \
-  -H "Authorization: Bearer $ROOTLY_API_TOKEN" \
+  -H "Authorization: Bearer $ROOTLY_TOKEN" \
   -H "Content-Type: application/vnd.api+json" \
   "$ROOTLY_URL/v1/incidents?filter[status]=started&filter[severity]=critical&page[size]=50" \
   --max-time 2 2>/dev/null)
@@ -733,7 +665,8 @@ if [[ "$COMMAND" != *"git push"* ]]; then
   exit 0
 fi
 
-if [ -z "$ROOTLY_API_TOKEN" ]; then
+ROOTLY_TOKEN="${CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN:-${ROOTLY_API_TOKEN:-}}"
+if [ -z "$ROOTLY_TOKEN" ]; then
   exit 0
 fi
 
@@ -743,7 +676,7 @@ BRANCH=$(git branch --show-current 2>/dev/null)
 REPO=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
 
 curl -s -X POST "$ROOTLY_URL/v1/deployments" \
-  -H "Authorization: Bearer $ROOTLY_API_TOKEN" \
+  -H "Authorization: Bearer $ROOTLY_TOKEN" \
   -H "Content-Type: application/vnd.api+json" \
   -d "{\"commit_sha\": \"$COMMIT_SHA\", \"branch\": \"$BRANCH\", \"repository\": \"$REPO\"}" \
   --max-time 3 2>/dev/null
@@ -771,9 +704,9 @@ The `/rootly:setup` skill helps create this config file.
 
 ---
 
-## Verified MCP Tool Reference
+## MCP Tool Reference
 
-The Rootly MCP server exposes 101 tools (16 custom + 85 OpenAPI-generated). Skills and agents reference these by exact name. The custom tools used by this plugin:
+The hosted Rootly MCP server exposes many tools, but this plugin depends on a focused subset. Skills and agents reference these by exact name:
 
 | Tool Name | Used By | Purpose |
 |-----------|---------|---------|
@@ -801,7 +734,7 @@ The Rootly MCP server exposes 101 tools (16 custom + 85 OpenAPI-generated). Skil
 ## Design Principles
 
 ### 1. MCP for Data, REST for Speed
-Skills and agents access incident data through the MCP server (101 tools, rich context). Hook scripts make direct REST calls for simple, time-sensitive checks (active incident count). This is a pragmatic split -- MCP is the primary data channel, REST is used only where hooks need sub-2-second responses.
+Skills and agents access incident data through the MCP server. Hook scripts make direct REST calls for simple, time-sensitive checks such as active-incident warnings. This is a pragmatic split: MCP is the primary data channel, and REST is used only where hooks need sub-2-second responses.
 
 ### 2. Progressive Disclosure
 - **Hooks** (automatic): Ambient awareness, zero effort
@@ -812,7 +745,7 @@ Skills and agents access incident data through the MCP server (101 tools, rich c
 All skills that modify Rootly data (`updateIncident`, change severity, add responder) require explicit user approval. The prompt instructions enforce this -- recommendations are presented, but actions require confirmation.
 
 ### 4. Graceful Degradation
-- No `ROOTLY_API_TOKEN`? SessionStart hook guides to `/rootly:setup`, skills explain how to configure.
+- No configured token? SessionStart hook guides to `/rootly:setup`, skills explain how to configure, and local development can still use `ROOTLY_API_TOKEN` as a fallback.
 - MCP server unreachable? Skills report the specific error and suggest manual steps.
 - Low-confidence results from `find_related_incidents` or `suggest_solutions`? Flag explicitly, suggest manual investigation.
 - Hooks fail silently on error -- never block the developer's workflow.
@@ -825,12 +758,13 @@ Only the session-start validation and pre-commit incident check are enabled by d
 
 ## Authentication Flow
 
-1. User installs plugin via `/plugin marketplace add Rootly-AI-Labs/claude-rootly-plugin`
-2. SessionStart hook detects missing token, outputs: "Run /rootly:setup to configure"
-3. `/rootly:setup` guides through: get token from Rootly dashboard (Settings > API Keys) -> set `ROOTLY_API_TOKEN` env var -> verify connection via `get_server_version`
-4. Plugin's `.mcp.json` passes `${ROOTLY_API_TOKEN}` to the hosted MCP server via HTTP Bearer header
-5. Hook scripts read `ROOTLY_API_TOKEN` directly from environment for REST calls
-6. Optionally, users set `ROOTLY_API_URL` for self-hosted Rootly instances (defaults to `https://api.rootly.com`)
+1. User loads the plugin in Claude Code, either from a marketplace install or locally with `claude --plugin-dir`
+2. Claude Code prompts for `ROOTLY_API_TOKEN` from the plugin's `userConfig`
+3. SessionStart hook validates the configured token and points the user to `/rootly:setup` if it is missing or invalid
+4. `/rootly:setup` verifies the MCP connection with `get_server_version` and helps with service mapping
+5. Plugin `.mcp.json` passes `${user_config.ROOTLY_API_TOKEN}` to the hosted MCP server
+6. Hook scripts read `CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN`, with `ROOTLY_API_TOKEN` kept only as a local development fallback
+7. Users can still set `ROOTLY_API_URL` for self-hosted REST endpoints (defaults to `https://api.rootly.com`)
 
 No credentials stored in plugin files. No interactive OAuth flow.
 
@@ -846,36 +780,10 @@ No credentials stored in plugin files. No interactive OAuth flow.
 
 ---
 
-## Implementation Priority
+## Validation Checklist
 
-### Phase 1: Core (MVP)
-1. Plugin manifest, marketplace entry, and MCP server reference
-2. `/rootly:setup` skill (first-run experience)
-3. `/rootly:deploy-check` skill
-4. `/rootly:respond` skill
-5. `/rootly:oncall` skill
-6. SessionStart hook (token validation)
-7. PreToolUse hook (active incident check)
-8. Service-to-repo mapping config support
-9. README with installation, setup, and usage guide
-
-### Phase 2: Learning Loop
-10. `/rootly:retro` skill
-11. `/rootly:status` skill
-12. `incident-investigator` agent
-
-### Phase 3: Advanced
-13. `/rootly:ask` skill
-14. `deploy-guardian` agent
-15. `retro-analyst` agent
-16. `register-deploy.sh` script (documented opt-in)
-
----
-
-## Testing Strategy
-
-- **Local testing**: `claude --plugin-dir ./claude-rootly-plugin` during development
-- **Reload**: `/reload-plugins` after changes, no restart needed
-- **Hook stdin verification**: Test with a debug hook (`cat > /tmp/hook-debug.json`) to capture the exact JSON structure before building the real scripts
-- **Validation**: Test each skill with real Rootly API token against a test organization
-- **Edge cases**: Missing token, invalid token, network timeout, empty incident history, no on-call configured, self-hosted Rootly URL, active incident during retro generation, clean git working tree on deploy-check
+- **Schema validation**: Run `claude plugin validate` when the Claude CLI is available.
+- **Local loading**: From the repo root, run `claude --plugin-dir .` during development.
+- **Reload loop**: Use `/reload-plugins` after manifest, skill, agent, or hook changes.
+- **Functional checks**: Exercise each skill against a test Rootly organization with a valid token.
+- **Edge cases**: Validate missing token, invalid token, network timeout, empty incident history, no on-call configured, self-hosted `ROOTLY_API_URL`, active incident during retro generation, and clean git working tree on deploy-check.
