@@ -31,7 +31,8 @@ if [[ "$COMMAND" != *"git push"* ]]; then
   exit 0
 fi
 
-if [ -z "$ROOTLY_API_TOKEN" ]; then
+ROOTLY_TOKEN="${CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN:-${ROOTLY_API_TOKEN:-}}"
+if [ -z "$ROOTLY_TOKEN" ]; then
   exit 0
 fi
 
@@ -41,7 +42,7 @@ BRANCH=$(git branch --show-current 2>/dev/null)
 REPO=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
 
 curl -s -X POST "$ROOTLY_URL/v1/deployments" \
-  -H "Authorization: Bearer $ROOTLY_API_TOKEN" \
+  -H "Authorization: Bearer $ROOTLY_TOKEN" \
   -H "Content-Type: application/vnd.api+json" \
   -d "{\"commit_sha\": \"$COMMIT_SHA\", \"branch\": \"$BRANCH\", \"repository\": \"$REPO\"}" \
   --max-time 3 2>/dev/null
