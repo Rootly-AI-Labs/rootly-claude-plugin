@@ -1,15 +1,21 @@
 {
   "name": "rootly",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Full-lifecycle incident management from your IDE. Prevent incidents before deploy, respond in real-time, and learn from post-mortems -- powered by Rootly.",
   "author": {
     "name": "Rootly AI Labs",
     "email": "support@rootly.com",
     "url": "https://rootly.com"
   },
-  "homepage": "https://github.com/Rootly-AI-Labs/claude-rootly-plugin",
-  "repository": "https://github.com/Rootly-AI-Labs/claude-rootly-plugin",
+  "homepage": "https://rootly.com/integrations/claude",
+  "repository": "https://github.com/Rootly-AI-Labs/rootly-claude-plugin",
   "license": "Apache-2.0",
+  "userConfig": {
+    "ROOTLY_API_TOKEN": {
+      "description": "Rootly API token used for MCP access and incident workflow hooks",
+      "sensitive": true
+    }
+  },
   "keywords": [
     "incident-management",
     "on-call",
