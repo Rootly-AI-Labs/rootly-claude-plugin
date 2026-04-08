@@ -116,14 +116,6 @@ Generates structured retrospectives from incident data: timeline, contributing f
 </tr>
 </table>
 
-### Setup & Configuration
-```
-> /rootly:setup
-```
-First-time plugin setup with API token validation, service mapping, and quick-start guide.
-
----
-
 ## Installation
 
 You can use this plugin in two ways:
@@ -220,6 +212,16 @@ This repository is a Claude Code plugin. If you only want direct Rootly MCP acce
 ```
 
 Replace `YOUR_TOKEN_HERE` with your Rootly API token, then restart the app.
+
+---
+
+## Setup & Configuration
+
+After installation, run the setup command:
+```
+> /rootly:setup
+```
+First-time plugin setup with API token validation, service mapping, and quick-start guide.
 
 ---
 
