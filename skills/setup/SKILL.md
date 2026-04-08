@@ -11,12 +11,17 @@ allowed-tools:
 
 You are running the first-time setup for the Rootly Claude plugin. Follow these steps in order:
 
-## Step 1: Verify MCP Connection
+## Step 1: Verify MCP Connection and Token
 
-Test the connection by calling the `mcp__rootly__get_server_version` MCP tool. This simultaneously validates that the API token is configured and that the MCP server is reachable.
+First, test the MCP server connection by calling `mcp__rootly__get_server_version`.
 
-- **Success**: Report the server version and skip to Step 3.
-- **Failure**: The token is likely missing or invalid. Provide these instructions:
+If that succeeds, verify the API token actually works by calling `mcp__rootly__getCurrentUser`.
+
+- **Both succeed**: Report success and continue to Step 2.
+- **get_server_version fails**: MCP server connection issue.
+- **getCurrentUser fails**: Token authentication issue.
+
+If either fails, provide these instructions:
 
 > **Rootly API Token Required**
 >
@@ -29,7 +34,11 @@ Test the connection by calling the `mcp__rootly__get_server_version` MCP tool. T
 >    ```
 > 5. Reload plugins or restart Claude Code, then run `/rootly:setup` again.
 
-Then stop here -- no further steps possible without the token.
+Then stop here -- no further steps possible without a working token.
+
+**Additional troubleshooting:**
+- If `get_server_version` works but `getCurrentUser` fails: Your token is configured but invalid or lacks permissions
+- If both fail: Token is missing or MCP server can't reach Rootly
 
 ## Step 2: Service Mapping Configuration
 
