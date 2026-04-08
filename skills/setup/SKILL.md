@@ -13,7 +13,7 @@ You are running the first-time setup for the Rootly Claude plugin. Follow these 
 
 ## Step 1: Verify MCP Connection
 
-Test the connection by calling the `get_server_version` MCP tool. This simultaneously validates that the API token is configured and that the MCP server is reachable.
+Test the connection by calling the `mcp__rootly__get_server_version` MCP tool. This simultaneously validates that the API token is configured and that the MCP server is reachable.
 
 - **Success**: Report the server version and skip to Step 3.
 - **Failure**: The token is likely missing or invalid. Provide these instructions:

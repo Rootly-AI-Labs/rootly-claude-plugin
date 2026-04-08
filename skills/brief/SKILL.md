@@ -16,8 +16,8 @@ You are creating a concise stakeholder brief for an incident. This is designed f
 ### 1. Get Incident Details
 
 If `$ARGUMENTS` contains an incident ID:
-- Call `getIncident` with the provided ID
-- Call `listIncidentAlerts` to get associated alerts
+- Call `mcp__rootly__getIncident` with the provided ID
+- Call `mcp__rootly__listIncidentAlerts` to get associated alerts
 
 If no incident ID provided, prompt the user to specify one.
 

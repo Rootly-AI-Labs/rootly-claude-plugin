@@ -15,7 +15,7 @@ You are showing the user a compact view of current service health based on activ
 
 ### 1. Fetch Active Incidents
 
-Call `search_incidents` filtered to active status (`started`).
+Call `mcp__rootly__search_incidents` filtered to active status (`started`).
 
 If `$ARGUMENTS` contains a service name, filter to that service.
 

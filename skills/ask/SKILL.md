@@ -19,17 +19,17 @@ Parse the user's question from `$ARGUMENTS`. Identify what data they need.
 
 ### 2. Discover Available Tools
 
-Call `list_endpoints` to see the full list of available Rootly MCP tools and their capabilities. This helps you select the right tools for the query.
+Call `mcp__rootly__list_endpoints` to see the full list of available Rootly MCP tools and their capabilities. This helps you select the right tools for the query.
 
 ### 3. Execute Queries
 
 Select the most appropriate tools for the question. You may need multiple calls to fully answer the question. Common patterns:
 
-- "How many incidents last week?" -> `search_incidents` with date filters
-- "Who's on call?" -> `get_oncall_handoff_summary`
-- "What happened with [service]?" -> `search_incidents` filtered by service
-- "Show me critical incidents" -> `search_incidents` filtered by severity
-- "Any patterns in auth service failures?" -> `search_incidents` + `find_related_incidents`
+- "How many incidents last week?" -> `mcp__rootly__search_incidents` with date filters
+- "Who's on call?" -> `mcp__rootly__get_oncall_handoff_summary`
+- "What happened with [service]?" -> `mcp__rootly__search_incidents` filtered by service
+- "Show me critical incidents" -> `mcp__rootly__search_incidents` filtered by severity
+- "Any patterns in auth service failures?" -> `mcp__rootly__search_incidents` + `mcp__rootly__find_related_incidents`
 
 ### 4. Present Answer
 

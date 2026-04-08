@@ -19,14 +19,14 @@ You are generating a structured post-incident retrospective. The output should b
 
 The incident ID should be provided in `$ARGUMENTS`. If not provided, ask the user for it.
 
-1. Call `getIncident` for the full incident record (note: camelCase tool name)
+1. Call `mcp__rootly__getIncident` for the full incident record
 2. Check the incident status:
    - If status is `started` (still active), warn the user: "This incident is still active. Retrospectives are typically done after resolution. Continue anyway?" Wait for confirmation before proceeding.
 
 ### 2. Gather Context
 
-1. Call `get_alert_by_short_id` or alert search tools for the alert timeline
-2. Call `find_related_incidents` to check for recurring patterns
+1. Call `mcp__rootly__get_alert_by_short_id` or alert search tools for the alert timeline
+2. Call `mcp__rootly__find_related_incidents` to check for recurring patterns
 
 ### 3. Generate Retrospective
 

@@ -17,9 +17,9 @@ You are showing the user a compact on-call dashboard. Gather data and present it
 
 Make these calls (in parallel if possible):
 
-1. `get_oncall_handoff_summary` -- Current and next on-call, shift context
-2. `get_oncall_shift_metrics` -- Workload data (hours, incident count)
-3. `check_oncall_health_risk` -- Fatigue and health risk indicators
+1. `mcp__rootly__get_oncall_handoff_summary` -- Current and next on-call, shift context
+2. `mcp__rootly__get_oncall_shift_metrics` -- Workload data (hours, incident count)
+3. `mcp__rootly__check_oncall_health_risk` -- Fatigue and health risk indicators
 
 If `$ARGUMENTS` contains a team name, pass it to scope the queries.
 

@@ -21,7 +21,7 @@ You are helping the user investigate and respond to a production incident. This 
 **If `$ARGUMENTS` contains an incident ID**: Use that ID directly.
 
 **If no incident ID provided**:
-1. Call `search_incidents` filtered to active status (`started`)
+1. Call `mcp__rootly__search_incidents` filtered to active status (`started`)
 2. If no active incidents, report "No active incidents found" and stop
 3. If multiple active incidents, list them sorted by severity (critical first, then high, then medium, then low) and ask the user to select one
 4. For long lists, show critical/high severity first with a note about additional lower-severity incidents
@@ -30,11 +30,11 @@ You are helping the user investigate and respond to a production incident. This 
 
 Once you have the incident ID:
 
-1. Call `getIncident` to get the full incident record (note: camelCase tool name)
-2. Call `get_alert_by_short_id` or search alerts for associated alert details and timeline
-3. Call `find_related_incidents` to find historically similar incidents
-4. Call `suggest_solutions` to get resolution recommendations
-5. Call `get_oncall_handoff_summary` for current team status
+1. Call `mcp__rootly__getIncident` to get the full incident record
+2. Call `mcp__rootly__get_alert_by_short_id` or search alerts for associated alert details and timeline
+3. Call `mcp__rootly__find_related_incidents` to find historically similar incidents
+4. Call `mcp__rootly__suggest_solutions` to get resolution recommendations
+5. Call `mcp__rootly__get_oncall_handoff_summary` for current team status
 
 ### 3. Present Response Brief
 

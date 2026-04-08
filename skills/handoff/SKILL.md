@@ -17,13 +17,13 @@ You are preparing a handoff document for either incident response or on-call shi
 
 If `$ARGUMENTS` contains an incident ID:
 - **Incident Handoff**: Create handoff for specific incident
-- Call `getIncident` with the provided ID
-- Call `listIncidentAlerts` for associated alerts
+- Call `mcp__rootly__getIncident` with the provided ID
+- Call `mcp__rootly__listIncidentAlerts` for associated alerts
 
 If no incident ID provided:
 - **On-Call Handoff**: Create general shift handoff
-- Call `get_oncall_handoff_summary` or relevant on-call endpoints
-- Call `search_incidents` filtered to recent active incidents
+- Call `mcp__rootly__get_oncall_handoff_summary` or relevant on-call endpoints
+- Call `mcp__rootly__search_incidents` filtered to recent active incidents
 
 ### 2. Generate Incident Handoff
 
