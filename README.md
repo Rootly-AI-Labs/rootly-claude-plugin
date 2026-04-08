@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://rootly.com/integrations/claude"><img src="https://img.shields.io/badge/rootly-integration-D97757?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0id2hpdGUiLz48L3N2Zz4=" alt="Rootly Integration" /></a>
-  <a href="https://github.com/Rootly-AI-Labs/claude-rootly-plugin/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License" /></a>
+  <a href="https://github.com/Rootly-AI-Labs/rootly-claude-plugin/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License" /></a>
   <a href="#installation"><img src="https://img.shields.io/badge/claude--code-plugin-4A154B?style=flat-square" alt="Claude Code Plugin" /></a>
 </p>
 
@@ -80,39 +80,83 @@ Generates a structured retrospective from incident data: timeline, contributing 
 
 ## Installation
 
-> We've applied to have this plugin listed on the [official Claude Code plugin marketplace](https://claude.com/plugins). In the meantime, install manually:
+You can use this plugin in two ways:
 
-### Step 1: Connect the Rootly MCP Server
+- **Marketplace install** for a persistent Claude Code installation
+- **Local `--plugin-dir` loading** for development and evaluation from source
 
-The plugin requires the Rootly MCP server to access incident data. You must configure it before using the plugin.
+### Marketplace Install
 
-Get an API token from your Rootly dashboard under **Settings > API Keys**, then configure the MCP server for your platform:
+This repository includes `.claude-plugin/marketplace.json`, so Claude Code can use the repo itself as a marketplace source.
 
-<details>
-<summary><strong>Claude Code (CLI)</strong></summary>
+1. Add the marketplace:
 
-The plugin's `.mcp.json` handles this automatically. Just set the token:
+```text
+/plugin marketplace add Rootly-AI-Labs/rootly-claude-plugin
+```
+
+2. Open the plugin manager:
+
+```text
+/plugin
+```
+
+3. In the **Discover** tab, select `rootly` and install it to your preferred scope:
+
+- **User**: available across all your projects
+- **Project**: shared through this repository's `.claude/settings.json`
+- **Local**: only for you in this repository
+
+4. Reload plugins so the install takes effect immediately:
+
+```text
+/reload-plugins
+```
+
+5. When Claude Code prompts for the plugin's configuration, paste your Rootly API token, then run:
+
+```text
+/rootly:setup
+```
+
+### Local Source Loading
+
+#### Step 1: Clone the Plugin
 
 ```bash
-# Add to your shell profile (~/.bashrc, ~/.zshrc)
+git clone https://github.com/Rootly-AI-Labs/rootly-claude-plugin.git
+cd rootly-claude-plugin
+```
+
+#### Step 2: Load It in Claude Code
+
+```bash
+claude --plugin-dir .
+```
+
+Claude Code loads the plugin directly from this directory for the current session. This is the recommended flow for local development and evaluation. For a persistent install, use the marketplace flow above.
+
+#### Step 3: Provide a Rootly API Token
+
+Get a token from your Rootly dashboard under **Settings > API Keys**.
+
+The plugin manifest now declares a prompted plugin option for `ROOTLY_API_TOKEN`, and the bundled `.mcp.json` uses it automatically for the hosted Rootly MCP server.
+
+If Claude Code does not prompt for plugin options in your environment yet, you can still use the development fallback:
+
+```bash
 export ROOTLY_API_TOKEN="your-token-here"
 ```
 
-Or add to `~/.claude/settings.json`:
+#### Step 4: Verify
 
-```json
-{
-  "env": {
-    "ROOTLY_API_TOKEN": "your-token-here"
-  }
-}
 ```
-</details>
+/rootly:setup
+```
 
-<details>
-<summary><strong>Claude Desktop / Cowork</strong></summary>
+### Direct MCP Access
 
-Add the Rootly MCP server to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+This repository is a Claude Code plugin. If you only want direct Rootly MCP access in Claude Desktop / Cowork, configure the MCP server separately:
 
 ```json
 {
@@ -129,26 +173,7 @@ Add the Rootly MCP server to `~/Library/Application Support/Claude/claude_deskto
 }
 ```
 
-Replace `YOUR_TOKEN_HERE` with your Rootly API token. Restart Claude Desktop after saving.
-
-> **Note**: Claude Desktop requires stdio-based MCP servers. The `mcp-remote` package bridges the remote Rootly HTTP server into the stdio transport that Desktop expects.
-</details>
-
-### Step 2: Install the Plugin
-
-**Claude Code (CLI)**:
-```bash
-git clone https://github.com/Rootly-AI-Labs/claude-rootly-plugin.git
-claude --plugin-dir ./claude-rootly-plugin
-```
-
-**Claude Desktop / Cowork**: Upload `rootly.zip` via the Customize menu in Cowork, or browse the plugin marketplace once listed.
-
-### Step 3: Verify
-
-```
-/rootly:setup
-```
+Replace `YOUR_TOKEN_HERE` with your Rootly API token, then restart the app.
 
 ---
 
@@ -192,7 +217,7 @@ Two lightweight hooks run in the background -- they **never block** your workflo
 
 | Hook | When | What It Does |
 |------|------|--------------|
-| **Token check** | Session start | Validates your API token and nudges you to set one if missing |
+| **Token check** | Session start | Validates your API token and nudges you to configure one if missing |
 | **Incident warning** | Before `git commit` / `git push` | Warns if there's an active critical incident -- so you don't deploy into a fire |
 
 ---
@@ -236,7 +261,7 @@ Replace the HTTP transport in `.mcp.json`:
       "command": "uvx",
       "args": ["--from", "rootly-mcp-server", "rootly-mcp-server"],
       "env": {
-        "ROOTLY_API_TOKEN": "<YOUR_TOKEN>"
+        "ROOTLY_API_TOKEN": "${user_config.ROOTLY_API_TOKEN}"
       }
     }
   }
@@ -256,7 +281,7 @@ claude mcp add rootly --transport http https://mcp.rootly.com/mcp \
 <details>
 <summary><strong>Post-push deployment registration</strong></summary>
 
-An optional script (`scripts/register-deploy.sh`) can register deployments with Rootly after `git push`. It's not enabled by default -- see the script header for hook configuration.
+An optional script (`scripts/register-deploy.sh`) can register deployments with Rootly after `git push`. It is not enabled by default -- see the script header for hook configuration.
 </details>
 
 ---
@@ -265,10 +290,10 @@ An optional script (`scripts/register-deploy.sh`) can register deployments with 
 
 | Problem | Fix |
 |---------|-----|
-| "No API token found" | Set `ROOTLY_API_TOKEN` in your shell profile or Claude settings. See [Installation](#set-your-api-token). |
-| "API token appears invalid" | Regenerate your key in Rootly: **Settings > API Keys**. |
-| MCP tools not responding | Check connectivity: `curl -H "Authorization: Bearer $ROOTLY_API_TOKEN" https://api.rootly.com/v1/users/me` |
-| Skills not appearing | Run `/reload-plugins`, then check `/plugin` installed tab. |
+| "No API token found" | Re-open the Rootly plugin config and provide a valid token, or set `ROOTLY_API_TOKEN` temporarily when testing with `--plugin-dir`. |
+| "API token appears invalid" | Regenerate your key in Rootly: **Settings > API Keys**, then update the plugin config and rerun `/rootly:setup`. |
+| MCP tools not responding | Confirm the token works against `https://api.rootly.com/v1/users/me`, then reload the plugin with `/reload-plugins`. |
+| Skills not appearing | Run `/reload-plugins`, then check the **Installed** tab in `/plugin`. |
 | Hook scripts not running | Run `chmod +x scripts/*.sh` and ensure `jq` or `python3` is available. |
 
 ---
