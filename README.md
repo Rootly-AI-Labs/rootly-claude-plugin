@@ -66,15 +66,61 @@ See who's on-call across all schedules, shift metrics, upcoming handoffs, and he
 </td>
 <td width="50%">
 
+### Service Health Check
+```
+> /rootly:status
+```
+Quick overview of all services with active incidents grouped by severity and age.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### Stakeholder Communication
+```
+> /rootly:brief INC-4521
+```
+Generate executive-friendly incident summaries with impact, timeline, and current status for stakeholder updates.
+
+</td>
+<td width="50%">
+
+### Shift Handoffs
+```
+> /rootly:handoff
+```
+Create structured handoff documents for incident commanders or on-call transitions with context and next steps.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### Ask Questions
+```
+> /rootly:ask "incidents this week"
+```
+Natural language queries about your incident data, on-call schedules, and service reliability patterns.
+
+</td>
+<td width="50%">
+
 ### After the Dust Settles
 ```
 > /rootly:retro INC-4521
 ```
-Generates a structured retrospective from incident data: timeline, contributing factors, action items, and systemic patterns.
+Generates structured retrospectives from incident data: timeline, contributing factors, action items, and systemic patterns.
 
 </td>
 </tr>
 </table>
+
+### Setup & Configuration
+```
+> /rootly:setup
+```
+First-time plugin setup with API token validation, service mapping, and quick-start guide.
 
 ---
 
