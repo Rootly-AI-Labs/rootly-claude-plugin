@@ -234,6 +234,8 @@ Replace `YOUR_TOKEN_HERE` with your Rootly API token, then restart the app.
 | `/rootly:retro [id]` | Generate a post-incident retrospective |
 | `/rootly:status [service]` | Service health overview -- active incidents at a glance |
 | `/rootly:ask [question]` | Ask anything about your incident data in plain English |
+| `/rootly:brief [id]` | Generate concise stakeholder brief for executives/customers |
+| `/rootly:handoff [id]` | Prepare incident or on-call handoff documentation |
 
 ### Natural Language Queries
 

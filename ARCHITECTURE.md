@@ -27,8 +27,12 @@ rootly-claude-plugin/
 │   │   └── SKILL.md                         # /rootly:retro
 │   ├── status/
 │   │   └── SKILL.md                         # /rootly:status
-│   └── ask/
-│       └── SKILL.md                         # /rootly:ask
+│   ├── ask/
+│   │   └── SKILL.md                         # /rootly:ask
+│   ├── brief/
+│   │   └── SKILL.md                         # /rootly:brief (stakeholder communication)
+│   └── handoff/
+│       └── SKILL.md                         # /rootly:handoff (shift transitions)
 ├── agents/
 │   ├── incident-investigator.md             # Deep incident investigation agent
 │   ├── deploy-guardian.md                   # Deployment risk analysis agent
@@ -407,6 +411,71 @@ allowed-tools:
 4. Execute queries (may require multiple calls)
 5. Synthesize and present answer with supporting data
 6. If the question can't be answered with available tools, say so explicitly rather than hallucinating
+
+---
+
+#### 4h. `/rootly:brief` -- Stakeholder Communication
+
+```
+skills/brief/SKILL.md
+```
+
+**Purpose**: Generate concise executive/stakeholder briefs for incidents.
+
+**Frontmatter**:
+```yaml
+name: brief
+description: Generate a concise stakeholder brief for an incident. Creates executive summary with key details, impact, timeline, and current status.
+argument-hint: [incident-id]
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
+```
+
+**Workflow**:
+1. Parse incident ID from `$ARGUMENTS`
+2. Call `mcp__rootly__getIncident` for full incident details
+3. Call `mcp__rootly__listIncidentAlerts` for associated alerts
+4. Generate structured brief with business-focused language:
+   - Executive summary with impact and current status
+   - Service impact and timeline
+   - Next steps and resolution approach
+5. Format for non-technical stakeholders (under 200 words)
+
+**Use Cases**: CEO updates, customer communications, legal/compliance documentation, cross-team notifications.
+
+---
+
+#### 4i. `/rootly:handoff` -- Shift Transitions
+
+```
+skills/handoff/SKILL.md
+```
+
+**Purpose**: Prepare incident or on-call handoff documents for shift changes.
+
+**Frontmatter**:
+```yaml
+name: handoff
+description: Prepare an incident or on-call handoff document. Creates structured summary for shift changes or incident commander transitions.
+argument-hint: [incident-id]
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
+```
+
+**Workflow**:
+1. Determine handoff type based on `$ARGUMENTS`:
+   - **Incident handoff** (with incident ID): Call `mcp__rootly__getIncident` and `mcp__rootly__listIncidentAlerts`
+   - **On-call handoff** (no ID): Call `mcp__rootly__get_oncall_handoff_summary` and `mcp__rootly__search_incidents`
+2. Generate structured handoff document with:
+   - Current situation summary
+   - Actions taken and next steps
+   - Key contacts and escalation paths
+   - Critical context and monitoring points
+3. Format for seamless knowledge transfer
+
+**Use Cases**: Shift changes, incident commander transitions, on-call handoffs, team coordination.
 
 ---
 

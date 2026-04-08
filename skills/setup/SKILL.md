@@ -63,6 +63,8 @@ Once setup is complete, display:
 > | `/rootly:retro [incident-id]` | Generate post-incident retrospective |
 > | `/rootly:status` | Service health overview |
 > | `/rootly:ask [question]` | Ask questions about your incident data |
+> | `/rootly:brief [incident-id]` | Generate stakeholder brief for executives |
+> | `/rootly:handoff [incident-id]` | Prepare incident or on-call handoff docs |
 >
 > Hooks are active:
 > - **Session start**: Token validation (already ran)
