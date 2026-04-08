@@ -12,7 +12,9 @@
   "license": "Apache-2.0",
   "userConfig": {
     "ROOTLY_API_TOKEN": {
+      "title": "Rootly API Token",
       "description": "Rootly API token used for MCP access and incident workflow hooks",
+      "type": "string",
       "sensitive": true
     }
   },
