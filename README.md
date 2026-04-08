@@ -223,6 +223,39 @@ Replace `YOUR_TOKEN_HERE` with your Rootly API token, then restart the app.
 
 ---
 
+## Updating Your API Token
+
+If you need to update your Rootly API token:
+
+### Option 1: Reinstall Plugin (Recommended)
+```bash
+# Uninstall and reinstall to get fresh configuration prompt
+claude plugin uninstall rootly@rootly-plugins
+claude plugin install rootly@rootly-plugins
+```
+
+### Option 2: Plugin Interface  
+```bash
+# Use the interactive plugin manager
+claude plugin
+```
+Then go to **Installed** tab, find Rootly, and look for configuration options.
+
+### Option 3: Temporary Override (Development)
+```bash
+# Override with environment variable (session only)
+export ROOTLY_API_TOKEN="new-token-here"
+```
+
+### Option 4: Manual Settings Edit (Advanced)
+Edit the settings file directly:
+- **User scope**: `~/.claude/settings.json` 
+- **Project scope**: `.claude/settings.json`
+
+Look for `pluginConfigs["rootly@rootly-plugins"].options.ROOTLY_API_TOKEN` and update the value.
+
+---
+
 ## Commands
 
 | Command | What It Does |
