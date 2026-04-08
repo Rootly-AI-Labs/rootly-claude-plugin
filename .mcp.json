@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://mcp.rootly.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${user_config.ROOTLY_API_TOKEN}"
+        "Authorization": "Bearer ${CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN}"
       }
     }
   }

@@ -186,9 +186,9 @@ Claude Code loads the plugin directly from this directory for the current sessio
 
 Get a token from your Rootly dashboard under **Settings > API Keys**.
 
-The plugin manifest now declares a prompted plugin option for `ROOTLY_API_TOKEN`, and the bundled `.mcp.json` uses it automatically for the hosted Rootly MCP server.
+The plugin will prompt for your `ROOTLY_API_TOKEN` when you install it. This single configuration works for all plugin features.
 
-If Claude Code does not prompt for plugin options in your environment yet, you can still use the development fallback:
+For local development with `--plugin-dir`, you can use the environment variable fallback:
 
 ```bash
 export ROOTLY_API_TOKEN="your-token-here"

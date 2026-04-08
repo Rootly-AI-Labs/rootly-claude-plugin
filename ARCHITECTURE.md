@@ -126,14 +126,14 @@ This file references Rootly's hosted MCP server. The plugin does not bundle a se
       "type": "http",
       "url": "https://mcp.rootly.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${user_config.ROOTLY_API_TOKEN}"
+        "Authorization": "Bearer ${CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN}"
       }
     }
   }
 }
 ```
 
-**Authentication**: The plugin declares `ROOTLY_API_TOKEN` in `userConfig`, so Claude Code can prompt for it when the plugin is enabled. The hosted MCP config consumes that value through `${user_config.ROOTLY_API_TOKEN}`. For local development with `--plugin-dir`, the runtime scripts still support `ROOTLY_API_TOKEN` as a fallback environment variable.
+**Authentication**: The plugin declares `ROOTLY_API_TOKEN` in `userConfig`, so Claude Code prompts for it when the plugin is enabled and automatically exports it as `CLAUDE_PLUGIN_OPTION_ROOTLY_API_TOKEN`. The MCP config and hook scripts both use this environment variable with fallback to `ROOTLY_API_TOKEN` for local development with `--plugin-dir`.
 
 **Alternative configurations** (also documented in the README for advanced users):
 - **CLI setup**: `claude mcp add rootly --transport http https://mcp.rootly.com/mcp --header "Authorization: Bearer YOUR_TOKEN"`
