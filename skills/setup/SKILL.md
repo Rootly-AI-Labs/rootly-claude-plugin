@@ -1,8 +1,10 @@
 ---
 name: setup
 description: Set up the Rootly plugin. Checks for API token, verifies MCP server connection, and guides through configuration. Run this after installing the plugin.
-argument-hint: []
-allowed-tools: Bash, mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - Bash
+  - mcp__rootly__*
 ---
 
 # Rootly Plugin Setup
@@ -20,19 +22,12 @@ Test the connection by calling the `get_server_version` MCP tool. This simultane
 >
 > 1. Go to your Rootly dashboard: **Settings > API Keys**
 > 2. Create a new API key with read access (write access needed only for incident response actions)
-> 3. Set the environment variable in your shell profile:
+> 3. If the plugin was installed through Claude Code, open the plugin settings for Rootly and paste the token when prompted
+> 4. If you are testing the plugin locally with `--plugin-dir`, you can temporarily set:
 >    ```bash
 >    export ROOTLY_API_TOKEN="your-token-here"
 >    ```
-> 4. Or add it to `~/.claude/settings.json` under `"env"`:
->    ```json
->    {
->      "env": {
->        "ROOTLY_API_TOKEN": "your-token-here"
->      }
->    }
->    ```
-> 5. Restart Claude Code and run `/rootly:setup` again.
+> 5. Reload plugins or restart Claude Code, then run `/rootly:setup` again.
 
 Then stop here -- no further steps possible without the token.
 

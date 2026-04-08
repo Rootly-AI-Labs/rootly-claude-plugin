@@ -2,7 +2,9 @@
 name: oncall
 description: Show current on-call status, shift metrics, and health indicators for your team. Use to check who's on-call, handoff context, or on-call workload.
 argument-hint: [team-name]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
 ---
 
 # On-Call Dashboard

@@ -2,7 +2,9 @@
 name: status
 description: Show a compact service health overview including active incidents by severity. Use for a quick health check of your services.
 argument-hint: [service-name]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
 ---
 
 # Service Health Overview

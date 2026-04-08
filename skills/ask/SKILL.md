@@ -2,7 +2,9 @@
 name: ask
 description: Ask natural language questions about incidents, on-call, services, and reliability data. Translates your question into Rootly API calls and returns structured answers.
 argument-hint: [your question]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+allowed-tools:
+  - mcp__rootly__*
 ---
 
 # Natural Language Query
