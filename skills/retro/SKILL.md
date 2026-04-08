@@ -2,7 +2,11 @@
 name: retro
 description: Generate a structured post-incident retrospective from incident data. Use after an incident is resolved to document what happened, why, and action items.
 argument-hint: [incident-id]
-allowed-tools: mcp__rootly__*
+disable-model-invocation: true
+context: fork
+agent: rootly:retro-analyst
+allowed-tools:
+  - mcp__rootly__*
 ---
 
 # Retrospective Generator

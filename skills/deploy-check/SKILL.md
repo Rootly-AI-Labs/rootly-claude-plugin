@@ -2,7 +2,12 @@
 name: deploy-check
 description: Evaluate deployment risk by analyzing code changes against incident history, active incidents, and on-call readiness. Use when a developer is about to deploy, push, or merge code.
 argument-hint: [branch-name]
-allowed-tools: Bash, mcp__rootly__*
+disable-model-invocation: true
+context: fork
+agent: rootly:deploy-guardian
+allowed-tools:
+  - Bash
+  - mcp__rootly__*
 ---
 
 # Pre-Deploy Safety Check

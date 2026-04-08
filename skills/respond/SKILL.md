@@ -2,8 +2,12 @@
 name: respond
 description: Investigate and respond to a production incident. Pulls context, finds similar past incidents, suggests solutions, and enables coordination -- all from the terminal. Use when paged or when an incident needs attention.
 argument-hint: [incident-id]
+disable-model-invocation: true
 context: fork
-allowed-tools: Bash, mcp__rootly__*
+agent: rootly:incident-investigator
+allowed-tools:
+  - Bash
+  - mcp__rootly__*
 ---
 
 # Incident Response
