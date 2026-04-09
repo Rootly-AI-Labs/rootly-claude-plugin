@@ -1,0 +1,23 @@
+# Claude Code configuration
+.claude/
+
+# Screenshots and images (unless specifically needed for docs)
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Environment files
+.env
+.env.local
