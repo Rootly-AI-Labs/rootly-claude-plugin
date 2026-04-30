@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2026-04-30
+
+### Security
+- **Prevent token leakage from agents.** When the `mcp__rootly__*` tools were unreachable inside a forked subagent context, the `incident-investigator` and `deploy-guardian` agents would fall back to `Bash` and issue raw `curl` calls to `api.rootly.com` with the bearer token inlined into the command — leaking it to shell history, process listings, and tool-use logs. Added explicit "Tool Usage Rules" sections to all three plugin agents that:
+  - Require `mcp__rootly__*` tools exclusively for Rootly API access
+  - Forbid `curl`, `wget`, raw HTTP, or any Bash-based call to `api.rootly.com` / `mcp.rootly.com`
+  - Forbid embedding the API token as a literal in any command line
+  - Direct the agent to stop and report rather than fall back to Bash when MCP tools are unavailable
+
+  `Bash` remains available to `incident-investigator` and `deploy-guardian` for non-Rootly local operations only (`git log`, `git diff`, file inspection).
+
+### Note
+Anyone who ran `/rootly:respond <id>` or the `incident-investigator` / `deploy-guardian` agents on 2.0.0 or 2.0.1 should rotate their Rootly API token in **Settings → API Keys**, since it may be present in shell history or transcripts.
+
 ## [2.0.1] - 2026-04-30
 
 ### Fixed
