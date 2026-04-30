@@ -27,11 +27,9 @@ If either fails, provide these instructions:
 >
 > 1. Go to your Rootly dashboard: **Settings > API Keys**
 > 2. Create a new API key with read access (write access needed only for incident response actions)
-> 3. If the plugin was installed through Claude Code, open the plugin settings for Rootly and paste the token when prompted
-> 4. If you are testing the plugin locally with `--plugin-dir`, you can temporarily set:
->    ```bash
->    export ROOTLY_API_TOKEN="your-token-here"
->    ```
+> 3. Provide the token through the plugin's userConfig prompt. This is the canonical path for both marketplace installs and `--plugin-dir` loading. The MCP server reads `${user_config.ROOTLY_API_TOKEN}` and will not pick up an arbitrary shell env var.
+>    - If the prompt did not appear, open `/plugin`, find Rootly, and re-enable it to trigger the configuration dialog.
+> 4. As a secondary path for hook scripts only, you can `export ROOTLY_API_TOKEN="..."`. The hook scripts (active-incident warnings on commit/push) honor it, but MCP commands like this one will still need the userConfig value above.
 > 5. Reload plugins or restart Claude Code, then run `/rootly:setup` again.
 
 Then stop here -- no further steps possible without a working token.
