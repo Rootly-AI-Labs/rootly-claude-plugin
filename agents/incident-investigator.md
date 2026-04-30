@@ -18,10 +18,14 @@ Follow these 8 steps systematically:
 ### Step 1: Gather Incident Data
 Resolve the incident reference to a UUID before calling `mcp__rootly__getIncident`:
 - If the input is a UUID (36-char hex with hyphens), use it directly.
-- If the input looks like a sequential reference (`4460`, `#4460`, `INC-4460`), strip prefixes to get the numeric value, then call `mcp__rootly__search_incidents` with `query` set to that number. Match on `attributes.sequential_id` exactly.
-- If `search_incidents` returns no match, call `mcp__rootly__list_incidents` with `page_size=100, sort=-created_at` and scan results for the matching `sequential_id`. If still not found within 1-2 pages, stop and ask the user for the incident UUID.
+- If the input looks like a sequential reference (`4460`, `#4460`, `INC-4460`), normalize it to `INC-4460`.
+- Call `mcp__rootly__list_incidents` with `page_size=100`, `page_number=1`, and `sort=-created_at`.
+- Look for an exact match in the returned `incidents[*].incident_number`. When you find it, use the paired `incident_id` as the UUID.
+- If page 1 does not contain the incident, use page 1's newest `incident_number` to estimate the likely page, then check that page and at most one adjacent page.
+- Match only on `incident_number` and read the UUID from `incident_id`.
+- If the exact incident number is still not found quickly, stop and ask the user for the incident UUID.
 
-Do not walk paginated lists indefinitely. Do not estimate page numbers manually.
+Do not use `mcp__rootly__search_incidents` for numeric incident resolution. Do not walk paginated lists indefinitely.
 
 Once you have the UUID, call `mcp__rootly__getIncident` to get the full incident record. Extract the incident ID, affected services, timeline, severity, and current status.
 
