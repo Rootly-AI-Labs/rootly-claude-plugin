@@ -1,6 +1,6 @@
 {
   "name": "rootly",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Full-lifecycle incident management from your IDE. Prevent incidents before deploy, respond in real-time, and learn from post-mortems -- powered by Rootly.",
   "author": {
     "name": "Rootly AI Labs",
