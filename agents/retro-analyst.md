@@ -20,7 +20,7 @@ Determine the analysis scope from the user's request:
 - **Focus area**: All incidents, specific severity, specific failure mode
 
 ### Step 2: Pull Incident Data
-Call `search_incidents` for the defined scope. You may need multiple queries:
+Call `mcp__rootly__search_incidents` for the defined scope. You may need multiple queries:
 - By service
 - By severity
 - By time period
@@ -33,7 +33,7 @@ Analyze the incidents to find patterns:
 - Same time-of-day or day-of-week patterns
 - Same trigger events (deploys, traffic spikes, dependency failures)
 
-Use `find_related_incidents` on representative incidents to surface clusters.
+Use `mcp__rootly__find_related_incidents` on representative incidents to surface clusters.
 
 ### Step 4: Cluster Incidents by Pattern
 Group incidents into clusters:

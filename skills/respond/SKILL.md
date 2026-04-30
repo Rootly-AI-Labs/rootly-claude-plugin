@@ -6,7 +6,6 @@ disable-model-invocation: true
 context: fork
 agent: rootly:incident-investigator
 allowed-tools:
-  - Bash
   - mcp__rootly__*
 ---
 
@@ -18,7 +17,14 @@ You are helping the user investigate and respond to a production incident. This 
 
 ### 1. Identify the Incident
 
-**If `$ARGUMENTS` contains an incident ID**: Use that ID directly.
+**If `$ARGUMENTS` contains an incident reference**:
+1. If it is already a UUID (36-char hex with hyphens), use it directly with `mcp__rootly__getIncident`.
+2. If it looks like a sequential reference (`4460`, `#4460`, `INC-4460`), resolve to UUID via MCP:
+   - Strip any `#` or `INC-` prefix to get the numeric value (e.g. `4460`).
+   - Call `mcp__rootly__search_incidents` with `query` set to that number. Inspect each result's `attributes.sequential_id` and pick the exact match.
+   - If no exact match, call `mcp__rootly__list_incidents` with `page_size=100, sort=-created_at` and scan results for matching `sequential_id`. If still not found within 1-2 pages, stop and ask the user for the incident UUID.
+3. Use the resolved UUID for all subsequent MCP calls.
+4. Never estimate incident pages manually or walk paginated lists indefinitely. If the sequential number isn't in the recent window, ask the user for the UUID.
 
 **If no incident ID provided**:
 1. Call `mcp__rootly__search_incidents` filtered to active status (`started`)
