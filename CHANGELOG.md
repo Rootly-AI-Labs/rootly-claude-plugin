@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-04-30
+
+### Fixed
+- **CRITICAL**: MCP `Authorization` header now uses `${user_config.ROOTLY_API_TOKEN}` instead of `${ROOTLY_API_TOKEN}`. The previous form only resolved from a literal OS env var, so marketplace-installed users (who paste the token at the plugin's userConfig prompt) silently authenticated with an empty bearer token and every MCP-backed command failed.
+- Numeric incident references (`4460`, `#4460`, `INC-4460`) now resolve to a UUID via `mcp__rootly__list_incidents` with bounded page lookup, instead of triggering open-ended page-walking. The agent matches on `incidents[*].incident_number` and reads the UUID from the paired `incident_id`.
+- Added the `mcp__rootly__` prefix to tool references in `incident-investigator`, `deploy-guardian`, and `retro-analyst` agents. The v2.0.0 changelog claimed this was fixed everywhere, but the agents were missed.
+
+### Changed
+- README and `/rootly:setup` skill now describe the MCP-vs-hook auth split honestly: the userConfig prompt is the canonical token path, while the `ROOTLY_API_TOKEN` env var only feeds the commit/push hook scripts.
+- Removed the unused bash resolver script and dropped `Bash` from `skills/respond/SKILL.md` `allowed-tools`.
+
 ## [2.0.0] - 2026-04-08
 
 ### Added

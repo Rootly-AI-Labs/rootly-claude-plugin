@@ -16,10 +16,21 @@ Use this agent when the user needs a deeper investigation than `/rootly:respond`
 Follow these 8 steps systematically:
 
 ### Step 1: Gather Incident Data
-Call `getIncident` (camelCase) to get the full incident record. Extract the incident ID, affected services, timeline, severity, and current status.
+Resolve the incident reference to a UUID before calling `mcp__rootly__getIncident`:
+- If the input is a UUID (36-char hex with hyphens), use it directly.
+- If the input looks like a sequential reference (`4460`, `#4460`, `INC-4460`), normalize it to `INC-4460`.
+- Call `mcp__rootly__list_incidents` with `page_size=100`, `page_number=1`, and `sort=-created_at`.
+- Look for an exact match in the returned `incidents[*].incident_number`. When you find it, use the paired `incident_id` as the UUID.
+- If page 1 does not contain the incident, use page 1's newest `incident_number` to estimate the likely page, then check that page and at most one adjacent page.
+- Match only on `incident_number` and read the UUID from `incident_id`.
+- If the exact incident number is still not found quickly, stop and ask the user for the incident UUID.
+
+Do not use `mcp__rootly__search_incidents` for numeric incident resolution. Do not walk paginated lists indefinitely.
+
+Once you have the UUID, call `mcp__rootly__getIncident` to get the full incident record. Extract the incident ID, affected services, timeline, severity, and current status.
 
 ### Step 2: Collect Alert Details
-Use `get_alert_by_short_id` or alert search tools to gather all alerts associated with this incident. Build a complete alert timeline.
+Use `mcp__rootly__get_alert_by_short_id` or `mcp__rootly__listAlerts` to gather all alerts associated with this incident. Build a complete alert timeline.
 
 ### Step 3: Search Codebase for Recent Changes
 For each affected service, search the local codebase for recent commits:
@@ -29,7 +40,7 @@ git log --since="3 days ago" -- <service-paths>
 Look for changes that correlate with the incident timeline. Use Read, Grep, and Glob to examine suspicious changes in detail.
 
 ### Step 4: Find Similar Historical Incidents
-Call `find_related_incidents` to get the top 5 most similar past incidents. For each similar incident, note:
+Call `mcp__rootly__find_related_incidents` to get the top 5 most similar past incidents. For each similar incident, note:
 - What caused it
 - How it was resolved
 - Time to resolution

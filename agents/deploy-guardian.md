@@ -31,12 +31,12 @@ Map changed files to services. Check:
 For each directly affected service, identify what depends on it:
 - Search for imports, API calls, or references to the changed service
 - Check configuration files for service dependencies
-- Use `search_incidents` on downstream services to see if they've had issues related to the upstream service
+- Use `mcp__rootly__search_incidents` on downstream services to see if they've had issues related to the upstream service
 
 ### Step 4: Check Active Incidents and Freezes
-- Call `search_incidents` filtered to active status for ALL affected services (direct + downstream)
+- Call `mcp__rootly__search_incidents` filtered to active status for ALL affected services (direct + downstream)
 - Check for deployment freezes or change windows
-- Call `get_oncall_schedule_summary` for schedule awareness
+- Call `mcp__rootly__get_oncall_schedule_summary` for schedule awareness
 
 ### Step 5: Evaluate Blast Radius
 For each affected service (direct and downstream):
@@ -47,8 +47,8 @@ For each affected service (direct and downstream):
 
 ### Step 6: Assess On-Call Readiness
 For all impacted teams:
-- Call `check_oncall_health_risk` for fatigue indicators
-- Call `check_responder_availability` for each affected team
+- Call `mcp__rootly__check_oncall_health_risk` for fatigue indicators
+- Call `mcp__rootly__check_responder_availability` for each affected team
 - Flag any on-call gaps during or after the deployment window
 
 ### Step 7: Identify Cross-Team Coordination Needs

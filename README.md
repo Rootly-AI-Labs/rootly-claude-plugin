@@ -178,13 +178,15 @@ Claude Code loads the plugin directly from this directory for the current sessio
 
 Get a token from your Rootly dashboard under **Settings > API Keys**.
 
-The plugin will prompt for your `ROOTLY_API_TOKEN` when you install it. This single configuration works for all plugin features.
+The plugin will prompt for your `ROOTLY_API_TOKEN` when you install it. This single configuration works for all plugin features. The MCP server reads the token from `${user_config.ROOTLY_API_TOKEN}`, so the prompt is the canonical path for both marketplace installs and `--plugin-dir` loading.
 
-For local development with `--plugin-dir`, you can use the environment variable fallback:
+For non-interactive dev environments where you cannot complete the prompt, you can additionally export an env var:
 
 ```bash
 export ROOTLY_API_TOKEN="your-token-here"
 ```
+
+The env var is honored by the hook scripts (incident-warning checks at commit/push time), but **MCP-backed commands (`/rootly:respond`, `/rootly:oncall`, `/rootly:setup`, etc.) will only work once the userConfig prompt has been completed**, since HTTP MCP headers do not read from arbitrary OS env vars. If the prompt didn't appear, run `/plugin` and re-enable the Rootly plugin to trigger it.
 
 #### Step 4: Verify
 
@@ -243,11 +245,12 @@ claude plugin
 ```
 Then go to **Installed** tab, find Rootly, and look for configuration options.
 
-### Option 3: Temporary Override (Development)
+### Option 3: Hook-Only Env Var Override (Development)
 ```bash
-# Override with environment variable (session only)
+# Session-scoped override for hook scripts only
 export ROOTLY_API_TOKEN="new-token-here"
 ```
+Note: this only affects the hook scripts (active-incident warnings on commit/push). MCP-backed commands continue to read from the userConfig value, so update the plugin config (Option 1, 2, or 4) to refresh those.
 
 ### Option 4: Manual Settings Edit (Advanced)
 Edit the settings file directly:
@@ -373,7 +376,7 @@ An optional script (`scripts/register-deploy.sh`) can register deployments with 
 
 | Problem | Fix |
 |---------|-----|
-| "No API token found" | Re-open the Rootly plugin config and provide a valid token, or set `ROOTLY_API_TOKEN` temporarily when testing with `--plugin-dir`. |
+| "No API token found" | Re-open the Rootly plugin config and provide a valid token via the prompt. Setting `ROOTLY_API_TOKEN` as a shell env var only feeds the hook scripts; MCP commands need the userConfig value. |
 | "API token appears invalid" | Regenerate your key in Rootly: **Settings > API Keys**, then update the plugin config and rerun `/rootly:setup`. |
 | MCP tools not responding | Confirm the token works against `https://api.rootly.com/v1/users/me`, then reload the plugin with `/reload-plugins`. |
 | Skills not appearing | Run `/reload-plugins`, then check the **Installed** tab in `/plugin`. |
