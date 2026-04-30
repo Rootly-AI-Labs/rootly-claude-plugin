@@ -263,17 +263,34 @@ Look for `pluginConfigs["rootly@rootly-plugins"].options.ROOTLY_API_TOKEN` and u
 
 ## Commands
 
+### Stable (inline, MCP-native)
+
 | Command | What It Does |
 |---------|-------------|
 | `/rootly:setup` | First-run configuration and connection check |
-| `/rootly:deploy-check` | Pre-deploy risk analysis against incident history |
-| `/rootly:respond [id]` | Investigate and respond to a live incident |
+| `/rootly:my` | Personal dashboard — your active incidents, action items, and upcoming on-call |
+| `/rootly:status [service]` | Service health overview — active incidents at a glance |
 | `/rootly:oncall [team]` | On-call dashboard with shift metrics |
-| `/rootly:retro [id]` | Generate a post-incident retrospective |
-| `/rootly:status [service]` | Service health overview -- active incidents at a glance |
-| `/rootly:ask [question]` | Ask anything about your incident data in plain English |
-| `/rootly:brief [id]` | Generate concise stakeholder brief for executives/customers |
-| `/rootly:handoff [id]` | Prepare incident or on-call handoff documentation |
+| `/rootly:alert [short-id]` | Triage a Rootly alert — events, group context, linked incident |
+| `/rootly:lookup [name]` | Look up a service, team, or catalog entity — owner, on-call, reliability |
+| `/rootly:trend [scope]` | 30-day reliability trend with prior-period comparison |
+| `/rootly:brief [id]` | Stakeholder summary for executives or customers |
+| `/rootly:handoff [id]` | Incident or on-call handoff documentation |
+| `/rootly:ask [question]` | Natural-language Q&A over your Rootly data |
+| `/rootly:action [list\|add\|done]` | Manage incident action items (write actions confirm before mutating) |
+| `/rootly:swap [date]` | Request someone cover one of your shifts (write, confirms first) |
+| `/rootly:cover [team]` | Offer to cover someone else's shift (write, confirms first) |
+| `/rootly:announce [id]` | Draft and post a stakeholder update on an incident (write, confirms first) |
+
+### Experimental (forked subagent — may not have MCP access in all contexts)
+
+| Command | What It Does |
+|---------|-------------|
+| `/rootly:respond [id]` | Deep incident investigation via the `incident-investigator` agent |
+| `/rootly:retro [id]` | Post-incident retrospective via the `retro-analyst` agent |
+| `/rootly:deploy-check` | Pre-deploy risk analysis via the `deploy-guardian` agent |
+
+> The experimental skills delegate to forked subagents. In some Claude Code contexts the subagent doesn't inherit the plugin's MCP server; when that happens it stops and reports rather than falling back to bash/curl (which would leak the API token). For reliable coverage of those workflows, prefer `/rootly:brief`, `/rootly:status`, and the inline alternatives above.
 
 ### Natural Language Queries
 
