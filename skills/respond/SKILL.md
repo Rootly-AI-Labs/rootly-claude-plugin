@@ -1,6 +1,6 @@
 ---
 name: respond
-description: Investigate and respond to a production incident. Pulls context, finds similar past incidents, suggests solutions, and enables coordination -- all from the terminal. Use when paged or when an incident needs attention.
+description: "[experimental] Investigate and respond to a production incident. Pulls context, finds similar past incidents, suggests solutions, and enables coordination. Forked-subagent flow may not have MCP access in all Claude Code contexts -- prefer /rootly:status + /rootly:brief for now."
 argument-hint: [incident-id]
 disable-model-invocation: true
 context: fork
@@ -9,7 +9,12 @@ allowed-tools:
   - mcp__rootly__*
 ---
 
-# Incident Response
+# Incident Response (experimental)
+
+> **Experimental**: this skill uses `context: fork` to delegate to the `incident-investigator` agent. In some Claude Code contexts the forked subagent does not inherit the plugin's MCP tools, in which case the agent will stop and report rather than fall back to bash/curl. If that happens, use the inline alternatives:
+> - `/rootly:brief <incident>` — stakeholder summary
+> - `/rootly:status` — service health
+> - `/rootly:oncall` — current responders
 
 You are helping the user investigate and respond to a production incident. This runs in a forked context to keep incident data separate from the main coding session.
 

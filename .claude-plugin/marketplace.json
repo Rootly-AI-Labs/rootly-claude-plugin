@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Official Rootly plugins for Claude Code",
-    "version": "2.0.2"
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "rootly",
       "source": "./",
       "description": "Full-lifecycle incident management: deploy safety, incident response, on-call management, and retrospectives.",
-      "version": "2.0.2",
+      "version": "2.1.0",
       "author": {
         "name": "Rootly AI Labs"
       },

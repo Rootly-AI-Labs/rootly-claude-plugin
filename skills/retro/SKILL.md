@@ -1,6 +1,6 @@
 ---
 name: retro
-description: Generate a structured post-incident retrospective from incident data. Use after an incident is resolved to document what happened, why, and action items.
+description: "[experimental] Generate a structured post-incident retrospective from incident data. Forked-subagent flow may not have MCP access in all Claude Code contexts."
 argument-hint: [incident-id]
 disable-model-invocation: true
 context: fork
@@ -9,7 +9,9 @@ allowed-tools:
   - mcp__rootly__*
 ---
 
-# Retrospective Generator
+# Retrospective Generator (experimental)
+
+> **Experimental**: this skill uses `context: fork` to delegate to the `retro-analyst` agent. In some Claude Code contexts the forked subagent does not inherit the plugin's MCP tools. If the agent reports MCP tools unavailable, use `/rootly:brief <incident>` for a basic incident summary instead.
 
 You are generating a structured post-incident retrospective. The output should be copy-pasteable markdown.
 
