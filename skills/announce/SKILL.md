@@ -17,12 +17,10 @@ You are helping the user (often the incident commander) post a stakeholder-facin
 
 `$ARGUMENTS` should contain an incident reference (UUID, `INC-XXXX`, or sequential number).
 
-- If empty: list active incidents (`mcp__rootly__search_incidents` with `status=started`) and ask the user which to announce.
-- Otherwise resolve to a UUID using the same approach as `/rootly:respond`:
-  - UUID: use directly.
-  - Sequential: normalize to `INC-N`, call `mcp__rootly__list_incidents` (page_size=100, sort=-created_at), match on `incident_number`, read `incident_id`.
+- If empty: call `mcp__rootly__listIncidents` with `filter_status="started"`, `page_size=10`, and `sort="-started_at"` and ask the user which incident to announce.
+- Otherwise call `mcp__rootly__getIncident` with the incident reference exactly as provided. The MCP server accepts UUIDs plus sequential forms like `4460`, `#4460`, and `INC-4460`.
 
-Once resolved, call `mcp__rootly__getIncident` for the full record.
+Once resolved, use the returned incident record for the full context.
 
 ### 2. Identify the publication target
 
@@ -67,7 +65,20 @@ Confirm to post this update? (yes / edit / no)
 
 - **`yes`** → call the appropriate tool:
   - Status page update path: post via the status-page-specific MCP tool if one is exposed; otherwise create an incident event with the text and rely on Rootly's status-page integration to syndicate it. Prefer `mcp__rootly__createIncidentEvent` with a clear `event_type` if a dedicated tool isn't available.
-  - Internal-only path: call `mcp__rootly__createIncidentEvent` with the drafted text.
+  - Internal-only path: call `mcp__rootly__createIncidentEvent` with this shape:
+
+```json
+{
+  "incident_id": "[resolved incident UUID]",
+  "data": {
+    "type": "incident_events",
+    "attributes": {
+      "event": "[drafted message]",
+      "visibility": "internal"
+    }
+  }
+}
+```
 - **`edit`** → ask the user for revisions. Re-show the draft. Re-confirm.
 - **`no`** or anything else → acknowledge, do not post.
 

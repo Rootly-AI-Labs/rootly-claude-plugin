@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added — Tier 0 (critical workflow gaps)
 - **`/rootly:alert <short-id>`** — alert triage. Pulls the alert record, event timeline, sibling alerts in the same group, and any incident the alert is attached to. Read-only.
-- **`/rootly:action [list|add|done]`** — incident action items from the terminal. List your open items, create new ones with explicit confirmation, or mark them done. First write actions in the plugin.
+- **`/rootly:action [list|add]`** — incident action items from the terminal. List your open items or create new ones with explicit confirmation. First write actions in the plugin.
 - **`/rootly:my`** — personal Rootly dashboard: your active incidents, open action items, and upcoming on-call shifts in one glanceable view.
 
 ### Added — Tier 1 (high-frequency daily workflow)

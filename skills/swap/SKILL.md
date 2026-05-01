@@ -60,7 +60,23 @@ Confirm to create the override? (yes / no / pick another)
 
 ### 6. Wait for confirmation
 
-- **`yes`** → call `mcp__rootly__createOverrideShift` with the resolved schedule_id, the shift's start/end, and the coverer's user_id. Echo the resulting override ID and a confirmation line.
+- **`yes`** → call `mcp__rootly__createOverrideShift` with this shape:
+
+```json
+{
+  "schedule_id": "[schedule_id]",
+  "data": {
+    "type": "shifts",
+    "attributes": {
+      "starts_at": "[shift start ISO8601]",
+      "ends_at": "[shift end ISO8601]",
+      "user_id": [coverer user id]
+    }
+  }
+}
+```
+
+Echo the resulting override ID and a confirmation line.
 - **`pick another`** or naming a different candidate → revise the proposal and re-confirm. Do not execute on the first reply if the user is changing the candidate.
 - **`no`** or any other answer → acknowledge and stop. Do not call the create tool.
 

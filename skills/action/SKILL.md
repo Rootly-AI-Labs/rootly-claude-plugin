@@ -1,7 +1,7 @@
 ---
 name: action
-description: Manage incident action items from the terminal. Subcommands - list (default - your open action items), add <incident> "<description>" (create one on an incident), or done <action-item-id> (mark resolved). Use to capture follow-ups during or after an incident without opening the Rootly UI.
-argument-hint: [list | add <incident> "<description>" | done <action-item-id>]
+description: Manage incident action items from the terminal. Subcommands - list (default - your open action items) or add <incident> "<summary>" (create one on an incident). Use to capture follow-ups during or after an incident without opening the Rootly UI.
+argument-hint: [list | add <incident> "<summary>"]
 disable-model-invocation: true
 allowed-tools:
   - mcp__rootly__*
@@ -17,7 +17,6 @@ Parse `$ARGUMENTS`:
 
 - Empty or starts with `list` → **List mode** (default).
 - Starts with `add <incident-ref> ` → **Add mode**. The remainder is the description.
-- Starts with `done <action-item-id>` → **Done mode**.
 - Anything else → show the usage from `argument-hint` and stop.
 
 ---
@@ -51,16 +50,14 @@ If there are zero open items, say so plainly: "No open action items assigned to 
 Goal: create a new action item on an incident. **Write action — requires explicit confirmation.**
 
 1. Parse the incident reference from `$ARGUMENTS` (UUID, `INC-XXXX`, or bare number).
-2. Resolve to UUID using the same approach as `/rootly:respond`:
-   - UUID: use directly.
-   - Sequential: normalize to `INC-N`, call `mcp__rootly__list_incidents` (page_size=100, sort=-created_at), match on `incident_number`, read `incident_id`. If not on page 1, estimate page from delta and check ±1 adjacent. If not found quickly, ask the user for the UUID.
-3. Parse the description: everything after the incident reference, stripped of surrounding quotes.
+2. Resolve the incident by calling `mcp__rootly__getIncident` with the reference exactly as the user provided it. The MCP server now accepts UUIDs plus sequential forms like `4460`, `#4460`, and `INC-4460`.
+3. Parse the action item summary: everything after the incident reference, stripped of surrounding quotes.
 4. Show a preview to the user:
 
 ```
 **About to create action item:**
 - Incident: [INC-XXXX] [title]
-- Description: [description]
+- Summary: [summary]
 - Assigned to: [you / unassigned per default]
 - Priority: medium (default — adjust in Rootly UI if needed)
 
@@ -68,29 +65,24 @@ Confirm to create? (yes / no)
 ```
 
 5. **Wait for the user's reply.** Do not call `mcp__rootly__createIncidentActionItem` until they say yes.
-6. On confirmation, call `createIncidentActionItem` with the resolved incident UUID and description. Echo the resulting action item ID and any URL.
+6. On confirmation, call `mcp__rootly__createIncidentActionItem` with:
+
+```json
+{
+  "incident_id": "[resolved incident UUID]",
+  "data": {
+    "type": "incident_action_items",
+    "attributes": {
+      "summary": "[summary]",
+      "priority": "medium",
+      "status": "open"
+    }
+  }
+}
+```
+
+Echo the resulting action item ID and any URL.
 7. On rejection, acknowledge and stop without making the call.
-
----
-
-## Done mode
-
-Goal: mark an action item resolved. **Write action — requires explicit confirmation.**
-
-1. Parse the action item ID from `$ARGUMENTS` (UUID expected).
-2. Show a preview:
-
-```
-**About to mark action item complete:**
-- ID: [uuid]
-- This will set status = `done` (or equivalent resolved state).
-
-Confirm? (yes / no)
-```
-
-3. **Wait for the user's reply.** Do not mutate until they say yes.
-4. On confirmation, look for the appropriate update tool. The Rootly MCP exposes action item updates through the incident scope — call the equivalent of `updateIncident` action items endpoint. If a dedicated `updateIncidentActionItem` MCP tool exists, use it; otherwise report which tool is needed and stop.
-5. On rejection, acknowledge and stop.
 
 ---
 
@@ -100,3 +92,4 @@ Confirm? (yes / no)
 - Show what will change before the call, not after.
 - If a write fails mid-flight, surface the exact error so the user can decide whether to retry.
 - If `mcp__rootly__listAllIncidentActionItems` is rate-limited or paginates, take just the first page (50 items). The user can re-run if they need more.
+- Do not imply that action items can be marked done through this skill until the MCP exposes an update action item tool.

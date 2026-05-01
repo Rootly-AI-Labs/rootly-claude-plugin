@@ -70,8 +70,9 @@ Confirm to create the override? (yes / no)
 
 Call `mcp__rootly__createOverrideShift` with:
 - `schedule_id` of the target shift's schedule
-- `start` and `end` matching the shift's window
-- `user_id` = current user's UUID
+- `data.type = "shifts"`
+- `data.attributes.starts_at` and `data.attributes.ends_at` matching the shift window
+- `data.attributes.user_id` = current user's integer Rootly user ID
 
 Echo the result:
 
