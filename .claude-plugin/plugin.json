@@ -1,6 +1,6 @@
 {
   "name": "rootly",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Full-lifecycle incident management from your IDE. Prevent incidents before deploy, respond in real-time, and learn from post-mortems -- powered by Rootly.",
   "author": {
     "name": "Rootly AI Labs",
@@ -12,8 +12,8 @@
   "license": "Apache-2.0",
   "userConfig": {
     "ROOTLY_API_TOKEN": {
-      "title": "Rootly API Token",
-      "description": "Rootly API token used for MCP access and incident workflow hooks",
+      "title": "Rootly API Token (optional)",
+      "description": "Optional: Rootly API token for hook scripts. Leave blank to use OAuth2 for MCP access (recommended).",
       "type": "string",
       "sensitive": true
     }

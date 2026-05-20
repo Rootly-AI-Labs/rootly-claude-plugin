@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-05-20
+
+### Added
+- **OAuth2 is now the primary authentication method.** API tokens are no longer required for MCP commands. Existing users will be prompted to log in via OAuth2 on first use after updating.
+
+### Changed
+- `.mcp.json`: Removed `Authorization: Bearer` header -- OAuth2 handles auth at transport level
+- `plugin.json`: `ROOTLY_API_TOKEN` is now optional (only needed for hook scripts)
+- `skills/setup/SKILL.md`: OAuth2-first setup flow with API token as fallback for hooks
+- `README.md`: Updated installation, auth, troubleshooting, and Direct MCP Access sections
+- `scripts/validate-token.sh`: Clarified token is for hooks only, MCP uses OAuth2
+
+### Notes
+- MCP commands authenticate via OAuth2 automatically -- Claude handles the browser-based login flow
+- API tokens are still supported for hook scripts (commit/push incident warnings) and as a fallback
+- No changes to skills, agents, or MCP tools -- only the auth layer
+
 ## [2.1.0] - 2026-04-30
 
 ### Added — Tier 0 (critical workflow gaps)

@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Set up the Rootly plugin. Checks for API token, verifies MCP server connection, and guides through configuration. Run this after installing the plugin.
+description: Set up the Rootly plugin. Verifies MCP server connection via OAuth2 or API token and guides through configuration. Run this after installing the plugin.
 disable-model-invocation: true
 allowed-tools:
   - Bash
@@ -11,34 +11,42 @@ allowed-tools:
 
 You are running the first-time setup for the Rootly Claude plugin. Follow these steps in order:
 
-## Step 1: Verify MCP Connection and Token
+## Step 1: Verify MCP Connection
 
 First, test the MCP server connection by calling `mcp__rootly__get_server_version`.
 
-If that succeeds, verify the API token actually works by calling `mcp__rootly__getCurrentUser`.
+- **Succeeds**: The MCP server is reachable. Continue to Step 2.
+- **Fails with 401 / OAuth prompt**: Claude should automatically start the OAuth2 flow -- a browser window will open for you to log in to Rootly and grant access. Once authorized, retry `mcp__rootly__get_server_version`.
+- **Fails with other error**: MCP server connection issue. Check network connectivity to `https://mcp.rootly.com`.
 
-- **Both succeed**: Report success and continue to Step 2.
-- **get_server_version fails**: MCP server connection issue.
-- **getCurrentUser fails**: Token authentication issue.
+## Step 2: Verify Authentication
 
-If either fails, provide these instructions:
+Call `mcp__rootly__getCurrentUser` to confirm your identity.
 
-> **Rootly API Token Required**
+- **Succeeds**: Authentication is working. Report the authenticated user and team, then continue to Step 3.
+- **Fails**: Authentication issue. Provide troubleshooting:
+
+> **Authentication Troubleshooting**
 >
+> This plugin uses **OAuth2** by default -- Claude handles the login flow automatically when it connects to the MCP server. No API token is needed for MCP commands.
+>
+> If OAuth2 is not working:
+> 1. Ensure your Rootly organization has OAuth2 enabled
+> 2. Try disconnecting and reconnecting the MCP server: `/mcp` > find Rootly > disconnect > reconnect
+> 3. Check that your browser can reach `https://rootly.com/oauth/authorize`
+>
+> **Fallback: API Token (for hook scripts or environments without browser access)**
+>
+> Hook scripts (active-incident warnings on commit/push) still need an API token:
 > 1. Go to your Rootly dashboard: **Settings > API Keys**
-> 2. Create a new API key with read access (write access needed only for incident response actions)
-> 3. Provide the token through the plugin's userConfig prompt. This is the canonical path for both marketplace installs and `--plugin-dir` loading. The MCP server reads `${user_config.ROOTLY_API_TOKEN}` and will not pick up an arbitrary shell env var.
->    - If the prompt did not appear, open `/plugin`, find Rootly, and re-enable it to trigger the configuration dialog.
-> 4. As a secondary path for hook scripts only, you can `export ROOTLY_API_TOKEN="..."`. The hook scripts (active-incident warnings on commit/push) honor it, but MCP commands like this one will still need the userConfig value above.
-> 5. Reload plugins or restart Claude Code, then run `/rootly:setup` again.
+> 2. Create a new API key
+> 3. Provide the token through the plugin's userConfig prompt, or `export ROOTLY_API_TOKEN="..."`
+>
+> API tokens are optional for MCP commands -- OAuth2 is the recommended auth method.
 
-Then stop here -- no further steps possible without a working token.
+Then stop here -- no further steps possible without working authentication.
 
-**Additional troubleshooting:**
-- If `get_server_version` works but `getCurrentUser` fails: Your token is configured but invalid or lacks permissions
-- If both fail: Token is missing or MCP server can't reach Rootly
-
-## Step 2: Service Mapping Configuration
+## Step 3: Service Mapping Configuration
 
 Check if `.claude/rootly-config.json` exists in the current project directory.
 
@@ -56,11 +64,13 @@ Check if `.claude/rootly-config.json` exists in the current project directory.
 
 **If the file exists**, read and display its current configuration.
 
-## Step 3: Show Quick-Start Guide
+## Step 4: Show Quick-Start Guide
 
 Once setup is complete, display:
 
 > **Rootly plugin is ready!**
+>
+> **Authentication**: OAuth2 (logged in as {user name})
 >
 > | Command | Description |
 > |---------|-------------|
@@ -74,5 +84,5 @@ Once setup is complete, display:
 > | `/rootly:handoff [incident-id]` | Prepare incident or on-call handoff docs |
 >
 > Hooks are active:
-> - **Session start**: Token validation (already ran)
-> - **Pre-commit/push**: Active critical incident warnings
+> - **Session start**: Connection validation (already ran)
+> - **Pre-commit/push**: Active critical incident warnings (requires API token in plugin config)
