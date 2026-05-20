@@ -151,11 +151,13 @@ This repository includes `.claude-plugin/marketplace.json`, so Claude Code can u
 /reload-plugins
 ```
 
-5. When Claude Code prompts for the plugin's configuration, paste your Rootly API token, then run:
+5. Run setup -- Claude will automatically handle OAuth2 login when it connects to the MCP server:
 
 ```text
 /rootly:setup
 ```
+
+A browser window will open for you to log in to Rootly and grant access. No API token needed.
 
 ### Local Source Loading
 
@@ -174,21 +176,7 @@ claude --plugin-dir .
 
 Claude Code loads the plugin directly from this directory for the current session. This is the recommended flow for local development and evaluation. For a persistent install, use the marketplace flow above.
 
-#### Step 3: Provide a Rootly API Token
-
-Get a token from your Rootly dashboard under **Settings > API Keys**.
-
-The plugin will prompt for your `ROOTLY_API_TOKEN` when you install it. This single configuration works for all plugin features. The MCP server reads the token from `${user_config.ROOTLY_API_TOKEN}`, so the prompt is the canonical path for both marketplace installs and `--plugin-dir` loading.
-
-For non-interactive dev environments where you cannot complete the prompt, you can additionally export an env var:
-
-```bash
-export ROOTLY_API_TOKEN="your-token-here"
-```
-
-The env var is honored by the hook scripts (incident-warning checks at commit/push time), but **MCP-backed commands (`/rootly:respond`, `/rootly:oncall`, `/rootly:setup`, etc.) will only work once the userConfig prompt has been completed**, since HTTP MCP headers do not read from arbitrary OS env vars. If the prompt didn't appear, run `/plugin` and re-enable the Rootly plugin to trigger it.
-
-#### Step 4: Verify
+#### Step 3: Verify
 
 ```
 /rootly:setup
@@ -202,18 +190,13 @@ This repository is a Claude Code plugin. If you only want direct Rootly MCP acce
 {
   "mcpServers": {
     "rootly": {
-      "command": "npx",
-      "args": [
-        "-y", "mcp-remote",
-        "https://mcp.rootly.com/mcp",
-        "--header", "Authorization:Bearer YOUR_TOKEN_HERE"
-      ]
+      "url": "https://mcp.rootly.com/mcp"
     }
   }
 }
 ```
 
-Replace `YOUR_TOKEN_HERE` with your Rootly API token, then restart the app.
+Claude will handle OAuth2 login automatically -- a browser window opens for you to authenticate with Rootly. No API token needed.
 
 ---
 
@@ -227,37 +210,27 @@ First-time plugin setup with API token validation, service mapping, and quick-st
 
 ---
 
-## Updating Your API Token
+## Authentication
 
-If you need to update your Rootly API token:
+### OAuth2 (Recommended)
 
-### Option 1: Reinstall Plugin (Recommended)
+MCP commands use OAuth2 automatically. When Claude connects to the Rootly MCP server, it handles the OAuth2 flow -- a browser window opens for you to log in and grant access. No configuration needed.
+
+To re-authenticate, disconnect and reconnect the MCP server via `/mcp`.
+
+### API Token (Hook Scripts)
+
+Hook scripts (active-incident warnings on commit/push) still use API tokens since they run outside the MCP context:
+
 ```bash
-# Uninstall and reinstall to get fresh configuration prompt
-claude plugin uninstall rootly@rootly-plugins
-claude plugin install rootly@rootly-plugins
+# Via plugin config (persistent)
+# Set ROOTLY_API_TOKEN in the plugin's userConfig prompt
+
+# Via env var (session-scoped)
+export ROOTLY_API_TOKEN="your-token-here"
 ```
 
-### Option 2: Plugin Interface  
-```bash
-# Use the interactive plugin manager
-claude plugin
-```
-Then go to **Installed** tab, find Rootly, and look for configuration options.
-
-### Option 3: Hook-Only Env Var Override (Development)
-```bash
-# Session-scoped override for hook scripts only
-export ROOTLY_API_TOKEN="new-token-here"
-```
-Note: this only affects the hook scripts (active-incident warnings on commit/push). MCP-backed commands continue to read from the userConfig value, so update the plugin config (Option 1, 2, or 4) to refresh those.
-
-### Option 4: Manual Settings Edit (Advanced)
-Edit the settings file directly:
-- **User scope**: `~/.claude/settings.json` 
-- **Project scope**: `.claude/settings.json`
-
-Look for `pluginConfigs["rootly@rootly-plugins"].options.ROOTLY_API_TOKEN` and update the value.
+Get a token from your Rootly dashboard under **Settings > API Keys**.
 
 ---
 
@@ -376,9 +349,10 @@ Replace the HTTP transport in `.mcp.json`:
 <summary><strong>CLI MCP setup</strong></summary>
 
 ```bash
-claude mcp add rootly --transport http https://mcp.rootly.com/mcp \
-  --header "Authorization: Bearer YOUR_TOKEN"
+claude mcp add rootly --transport http https://mcp.rootly.com/mcp
 ```
+
+OAuth2 login will be triggered automatically on first use.
 </details>
 
 <details>
@@ -393,9 +367,10 @@ An optional script (`scripts/register-deploy.sh`) can register deployments with 
 
 | Problem | Fix |
 |---------|-----|
-| "No API token found" | Re-open the Rootly plugin config and provide a valid token via the prompt. Setting `ROOTLY_API_TOKEN` as a shell env var only feeds the hook scripts; MCP commands need the userConfig value. |
-| "API token appears invalid" | Regenerate your key in Rootly: **Settings > API Keys**, then update the plugin config and rerun `/rootly:setup`. |
-| MCP tools not responding | Confirm the token works against `https://api.rootly.com/v1/users/me`, then reload the plugin with `/reload-plugins`. |
+| OAuth2 login doesn't open browser | Ensure your Rootly org has OAuth2 enabled. Try `/mcp` > disconnect > reconnect Rootly. |
+| "No API token found" (hook scripts) | This only affects commit/push warnings. Set `ROOTLY_API_TOKEN` in plugin config or env var. MCP commands use OAuth2 instead. |
+| MCP tools not responding | Disconnect and reconnect via `/mcp`, or reload with `/reload-plugins`. |
+| OAuth2 consent shows limited permissions | Your org's OAuth2 configuration may need updating -- contact your Rootly admin. |
 | Skills not appearing | Run `/reload-plugins`, then check the **Installed** tab in `/plugin`. |
 | Hook scripts not running | Run `chmod +x scripts/*.sh` and ensure `jq` or `python3` is available. |
 
